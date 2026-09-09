@@ -81,6 +81,7 @@
     "tel/data/data_tel_hospital.js",
     "tel/data/data_tel_subway.js",
     "tel/data/data_tel_train_new.js",
+    "tool/data/data_tool_holidays.js",
     "tool/data/ygt1210_Tool_Time.js",
     "tour/data/data_tour_embassy.js",
     "tour/data/data_tour_festival.js",
