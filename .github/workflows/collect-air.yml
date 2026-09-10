@@ -1,0 +1,54 @@
+# 대기질(미세먼지) 측정소별 실시간 → tool/air.json.
+# 에어코리아 원본은 매시 갱신 → 30분 간격(늦은 공시 대비 :25/:55). 연속 스냅샷은
+# amend-squash로 히스토리 최소화(무변경이면 커밋 생략).
+name: collect-air
+
+on:
+  schedule:
+    - cron: '25,55 * * * *'   # 매시 :25, :55 (KST 무관, UTC 기준 매시)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-air
+  cancel-in-progress: true
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Collect air (측정소별)
+        env:
+          PART: air
+          DATAGO_KEY: ${{ secrets.DATAGO_TOOL_KEY }}
+        run: node tools/collect_tool_ext.js
+
+      - name: Commit & push (amend-squash)
+        run: |
+          git config user.name 'yogurt'
+          git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
+          git add tool/air.json
+          git diff --cached --quiet && echo 'no change' && exit 0
+          SUBJ="tool: 대기질 스냅샷"
+          LAST=$(git log -1 --pretty=%s)
+          git commit -m "$SUBJ $(TZ=Asia/Seoul date +%m-%d\ %H:%M)"
+          case "$LAST" in
+            "$SUBJ"*)
+              git reset --soft HEAD~2
+              git commit -m "$SUBJ $(TZ=Asia/Seoul date +%m-%d\ %H:%M)"
+              git push --force-with-lease origin main || { git fetch origin && git rebase origin/main && git push origin main; }
+              ;;
+            *)
+              git push origin main || { git fetch origin && git rebase origin/main && git push origin main; }
+              ;;
+          esac

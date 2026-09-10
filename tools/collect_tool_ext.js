@@ -90,50 +90,67 @@ async function collectSun() {
   console.log(`sun: ${Object.keys(days).length}일 × ${SUN_CITIES.length}지역`);
 }
 
-// ---------- 대기질 (에어코리아 시도별 시간평균 + 예보) ----------
+// ---------- 대기질 (에어코리아 측정소별 실시간 = 시도 → 동/구 단위) ----------
+// getCtprvnRltmMesureDnsty(sidoName)로 시도별 전 측정소를 받아 stations에 담고,
+// 유효 측정소 평균으로 sido 요약을 만든다. (측정소목록 API는 키 미등록이라 addr
+// 기반 시군구 그룹은 불가 — 측정소명 자체가 구/동 단위라 그대로 노출.)
 const AIR_SIDO = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '세종'];
+function airNum(v) { const n = Number(v); return (v == null || v === '' || v === '-' || isNaN(n)) ? null : n; }
 async function collectAir() {
   if (!DATAGO_KEY) { console.log('air: DATAGO_KEY 없음 — 건너뜀'); return; }
-  const rows = {};
+  const stations = {};
+  const sido = {};
+  let basisOut = '';
   let anyOk = false;
-  for (const item of ['PM10', 'PM25']) {
-    const url = `https://apis.data.go.kr/B552584/ArpltnStatsSvc/getCtprvnMesureLIst?serviceKey=${encodeURIComponent(DATAGO_KEY)}&returnType=json&numOfRows=1&pageNo=1&itemCode=${item}&dataGubun=HOUR`;
-    let j = null;
-    for (let a = 1; a <= 3 && !j; a++) {           // 에어코리아 백엔드 간헐 504 → 재시도
+  for (const s of AIR_SIDO) {
+    const url = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty`
+      + `?serviceKey=${encodeURIComponent(DATAGO_KEY)}&returnType=json&numOfRows=700&pageNo=1`
+      + `&sidoName=${encodeURIComponent(s)}&ver=1.3`;
+    let items = null;
+    for (let a = 1; a <= 3 && !items; a++) {         // 에어코리아 백엔드 간헐 504 → 재시도
       let r;
-      try { r = await get(url); } catch (e) { console.error(`air ${item} t${a}: ${e.message}`); await sleep(5000); continue; }
+      try { r = await get(url); } catch (e) { console.error(`air ${s} t${a}: ${e.message}`); await sleep(4000); continue; }
       try {
         const cand = JSON.parse(r.body);
-        if (cand.response && cand.response.header && cand.response.header.resultCode === '00') { j = cand; break; }
-        console.error(`air ${item} t${a}: ${cand.response ? cand.response.header.resultCode : (cand.OpenAPI_ServiceResponse ? cand.OpenAPI_ServiceResponse.cmmMsgHeader.errMsg : r.status)}`);
-      } catch (e) { console.error(`air ${item} t${a}: JSON 아님 (${r.body.slice(0, 60)})`); }
-      await sleep(5000);
+        if (cand.response && cand.response.header && cand.response.header.resultCode === '00') { items = cand.response.body.items || []; break; }
+        console.error(`air ${s} t${a}: ${cand.response ? cand.response.header.resultCode : (cand.OpenAPI_ServiceResponse ? cand.OpenAPI_ServiceResponse.cmmMsgHeader.errMsg : r.status)}`);
+      } catch (e) { console.error(`air ${s} t${a}: JSON 아님 (${r.body.slice(0, 60)})`); }
+      await sleep(4000);
     }
-    if (!j) continue;
-    const it = j.response.body && j.response.body.items && j.response.body.items[0];
-    if (!it) continue;
-    for (const s of AIR_SIDO) {
-      const v = Number(it[s.toLowerCase()] ?? it[s]);
-      const key = { '서울': 'seoul', '부산': 'busan', '대구': 'daegu', '인천': 'incheon', '광주': 'gwangju', '대전': 'daejeon', '울산': 'ulsan', '경기': 'gyeonggi', '강원': 'gangwon', '충북': 'chungbuk', '충남': 'chungnam', '전북': 'jeonbuk', '전남': 'jeonnam', '경북': 'gyeongbuk', '경남': 'gyeongnam', '제주': 'jeju', '세종': 'sejong' }[s];
-      const val = Number(it[key]);
-      if (!isNaN(val)) {
-        rows[s] = rows[s] || {};
-        rows[s][item === 'PM10' ? 'pm10' : 'pm25'] = val;
-        anyOk = true;
-      }
+    if (!items) continue;
+    const list = [];
+    let sum10 = 0, cnt10 = 0, sum25 = 0, cnt25 = 0;
+    for (const it of items) {
+      const nm = (it.stationName || '').trim();
+      if (!nm) continue;
+      const pm10 = airNum(it.pm10Value);
+      const pm25 = airNum(it.pm25Value);
+      list.push({ n: nm, pm10, pm25 });
+      if (pm10 != null) { sum10 += pm10; cnt10++; }
+      if (pm25 != null) { sum25 += pm25; cnt25++; }
+      if (it.dataTime && !basisOut) basisOut = it.dataTime;
     }
-    var basis = it.dataTime || '';
-    if (anyOk) rows._basis = basis;
-    await sleep(200);
+    if (!list.length) continue;
+    list.sort((a, b) => a.n.localeCompare(b.n, 'ko'));
+    stations[s] = list;
+    sido[s] = { pm10: cnt10 ? Math.round(sum10 / cnt10) : null, pm25: cnt25 ? Math.round(sum25 / cnt25) : null };
+    anyOk = true;
+    await sleep(300);
   }
-  if (!anyOk) { console.error('air: 수집 실패(활용신청/승인 확인 필요) — 기존 파일 유지'); return; }
-  const basisOut = rows._basis || ''; delete rows._basis;
-  fs.writeFileSync(path.join(OUT_DIR, 'air.json'), JSON.stringify({ generated: stamp(), basis: basisOut, rows }));
-  console.log(`air: ${Object.keys(rows).length}개 시도 (기준 ${basisOut})`);
+  if (!anyOk) { console.error('air: 수집 실패(활용신청/승인·504 확인) — 기존 파일 유지'); return; }
+  fs.writeFileSync(path.join(OUT_DIR, 'air.json'), JSON.stringify({ generated: stamp(), basis: basisOut, sido, stations }));
+  const total = Object.values(stations).reduce((a, l) => a + l.length, 0);
+  console.log(`air: ${Object.keys(stations).length}개 시도 · ${total}개 측정소 (기준 ${basisOut})`);
 }
 
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
+  // PART=air 로 실행하면 대기질만 수집(잦은 크론용). 미지정 시 전체.
+  const part = (process.env.PART || '').toLowerCase();
+  if (part === 'air') {
+    await collectAir().catch(e => console.error('air 예외: ' + e.message));
+    return;
+  }
   await collectFx().catch(e => console.error('fx 예외: ' + e.message));
   await collectSun().catch(e => console.error('sun 예외: ' + e.message));
   await collectAir().catch(e => console.error('air 예외: ' + e.message));
