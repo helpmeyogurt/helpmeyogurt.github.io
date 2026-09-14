@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex" />
+<title>끝판왕 앱 버전 현황</title>
+<style>
+  :root { --ok:#16a34a; --up:#2563eb; --warn:#d97706; --bad:#dc2626; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background:#f4f5f7; color:#222; }
+  header { background:#3069cf; color:#fff; padding:16px 18px; }
+  header h1 { margin:0; font-size:19px; }
+  header .sub { margin-top:4px; font-size:12px; opacity:.85; }
+  .wrap { padding:14px; max-width:900px; margin:0 auto; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+  .chip { font-size:12px; font-weight:700; padding:5px 10px; border-radius:20px; background:#fff; border:1px solid #e0e0e0; }
+  .chip b { font-size:13px; }
+  .chip.up { color:var(--up); } .chip.warn { color:var(--warn); } .chip.ok { color:var(--ok); }
+  button { font:inherit; font-size:13px; font-weight:700; padding:6px 12px; border:1px solid #3069cf; background:#fff; color:#3069cf; border-radius:8px; }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  th, td { padding:10px 8px; text-align:center; font-size:14px; border-bottom:1px solid #f0f0f0; }
+  th { background:#fafafa; font-size:12px; color:#666; position:sticky; top:0; }
+  td.name { text-align:left; font-weight:700; }
+  td.pkg { font-size:11px; color:#999; }
+  .v { font-variant-numeric: tabular-nums; font-weight:700; }
+  .st { font-size:12px; font-weight:800; padding:3px 8px; border-radius:6px; display:inline-block; }
+  .st.same { color:var(--ok); background:#e9f7ef; }
+  .st.local_ahead { color:var(--up); background:#e8f0fe; }
+  .st.market_ahead { color:var(--warn); background:#fef3e2; }
+  .st.unknown { color:#999; background:#f0f0f0; }
+  tr.local_ahead { background:#f6f9ff; }
+  tr.market_ahead { background:#fffaf0; }
+  .foot { margin:14px 2px; font-size:12px; color:#888; line-height:1.6; }
+  .loading { padding:40px; text-align:center; color:#999; }
+</style>
+</head>
+<body>
+<header>
+  <h1>끝판왕 앱 버전 현황</h1>
+  <div class="sub">구글플레이 라이브 버전 · 매시 자동 갱신 (yogurthelp.me/version.html)</div>
+</header>
+<div class="wrap">
+  <div class="bar">
+    <span class="chip">수집 <b id="gen">—</b></span>
+    <span class="chip up">▲ 업로드 필요 <b id="cUp">0</b></span>
+    <span class="chip warn">⚠ 마켓이 최신 <b id="cWarn">0</b></span>
+    <span class="chip ok">= 동일 <b id="cOk">0</b></span>
+    <button onclick="load()">새로고침</button>
+  </div>
+  <div id="body"><div class="loading">불러오는 중…</div></div>
+  <div class="foot">
+    <b>상태 설명</b> — <span style="color:var(--up)">▲ 업로드 필요</span>: 우리 버전이 마켓보다 높음(스토어 반영 대기) ·
+    <span style="color:var(--warn)">⚠ 마켓이 최신</span>: 마켓이 우리 목표보다 높음(gradle 동기화 필요) ·
+    <span style="color:var(--ok)">= 동일</span><br>
+    ※ '우리 버전'은 마지막 수집기 갱신 시점의 빌드 목표(build.gradle.kts). 마켓만 매시 자동 조회됩니다.
+  </div>
+</div>
+<script>
+var STORE = "https://play.google.com/store/apps/details?id=";
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+function stLabel(s){ return s==='same'?'= 동일':s==='local_ahead'?'▲ 업로드 필요':s==='market_ahead'?'⚠ 마켓이 최신':'조회 실패'; }
+function render(d){
+  document.getElementById('gen').textContent = d.generated || '—';
+  var up=0,warn=0,ok=0;
+  var rows = d.apps.map(function(a){
+    if(a.status==='local_ahead')up++; else if(a.status==='market_ahead')warn++; else if(a.status==='same')ok++;
+    return '<tr class="'+a.status+'">'
+      + '<td class="name">'+esc(a.name)+'<div class="pkg">'+esc(a.key)+'</div></td>'
+      + '<td class="v">'+esc(a.target||'—')+'</td>'
+      + '<td class="v"><a href="'+STORE+encodeURIComponent(a.pkg)+'" target="_blank" rel="noopener" style="color:inherit">'+esc(a.play||(a.note||'—'))+'</a></td>'
+      + '<td><span class="st '+a.status+'">'+stLabel(a.status)+'</span></td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById('cUp').textContent=up;
+  document.getElementById('cWarn').textContent=warn;
+  document.getElementById('cOk').textContent=ok;
+  document.getElementById('body').innerHTML =
+    '<table><thead><tr><th style="text-align:left">앱</th><th>우리 버전</th><th>마켓(Play)</th><th>상태</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function load(){
+  document.getElementById('body').innerHTML='<div class="loading">불러오는 중…</div>';
+  fetch('versions.json?t='+Date.now()).then(function(r){return r.json();}).then(render)
+    .catch(function(){ document.getElementById('body').innerHTML='<div class="loading">versions.json을 불러오지 못했습니다.</div>'; });
+}
+load();
+</script>
+</body>
+</html>

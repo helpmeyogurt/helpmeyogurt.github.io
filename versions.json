@@ -1,0 +1,250 @@
+{
+ "generated": "2026-09-14 10:43 KST",
+ "okCount": 27,
+ "total": 27,
+ "apps": [
+  {
+   "key": "weather",
+   "name": "날씨끝판왕",
+   "pkg": "me.yogurthelp.weather",
+   "target": "5.1.0",
+   "play": "5.1.0",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "news",
+   "name": "뉴스끝판왕",
+   "pkg": "me.yogurthelp.news",
+   "target": "5.0.7",
+   "play": "5.0.7",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "tel",
+   "name": "전화번호끝판왕",
+   "pkg": "me.yogurthelp.tel",
+   "target": "3.7.0",
+   "play": "3.7.0",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "intrate",
+   "name": "금리끝판왕",
+   "pkg": "me.yogurthelp.intrate",
+   "target": "5.0.0",
+   "play": "5.0.0",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "dep",
+   "name": "예금금리끝판왕",
+   "pkg": "me.yogurthelp.dep",
+   "target": "5.0.0",
+   "play": "5.0.0",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "loan",
+   "name": "대출금리끝판왕",
+   "pkg": "me.yogurthelp.loan",
+   "target": "5.0.0",
+   "play": "5.0.0",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "finance",
+   "name": "금융끝판왕",
+   "pkg": "me.yogurthelp.finance",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "stock",
+   "name": "주가지수끝판왕",
+   "pkg": "me.yogurthelp.stock",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "exchange",
+   "name": "환율끝판왕",
+   "pkg": "me.yogurthelp.exchange",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "realtytrade",
+   "name": "실거래가끝판왕",
+   "pkg": "me.yogurthelp.realtytrade",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "realtyprice",
+   "name": "공시가격끝판왕",
+   "pkg": "me.yogurthelp.realtyprice",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "realtycal",
+   "name": "부동산계산기끝판왕",
+   "pkg": "me.yogurthelp.realtycal",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "realtydata",
+   "name": "부동산정보끝판왕",
+   "pkg": "me.yogurthelp.realtydata",
+   "target": "5.0.6",
+   "play": "5.0.6",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "law",
+   "name": "법률정보끝판왕",
+   "pkg": "me.yogurthelp.law",
+   "target": "5.0.1",
+   "play": "3.7.0",
+   "note": "",
+   "status": "local_ahead"
+  },
+  {
+   "key": "salary",
+   "name": "월급계산기끝판왕",
+   "pkg": "me.yogurthelp.salary",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "tax",
+   "name": "세금정보끝판왕",
+   "pkg": "me.yogurthelp.tax",
+   "target": "5.0.2",
+   "play": "3.7.0",
+   "note": "",
+   "status": "local_ahead"
+  },
+  {
+   "key": "phone",
+   "name": "휴대폰끝판왕",
+   "pkg": "me.yogurthelp.phone",
+   "target": "5.0.0",
+   "play": "3.7.0",
+   "note": "",
+   "status": "local_ahead"
+  },
+  {
+   "key": "phonemem",
+   "name": "휴대폰멤버십끝판왕",
+   "pkg": "me.yogurthelp.phonemem",
+   "target": "3.7.1",
+   "play": "2.0.0",
+   "note": "",
+   "status": "local_ahead"
+  },
+  {
+   "key": "car",
+   "name": "자동차순위끝판왕",
+   "pkg": "me.yogurthelp.car",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "movie",
+   "name": "박스오피스끝판왕",
+   "pkg": "me.yogurthelp.movie",
+   "target": "5.0.6",
+   "play": "5.0.6",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "tv",
+   "name": "시청률끝판왕",
+   "pkg": "me.yogurthelp.tv",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "music",
+   "name": "음원차트끝판왕",
+   "pkg": "me.yogurthelp.music",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "book",
+   "name": "베스트셀러끝판왕",
+   "pkg": "me.yogurthelp.book",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "perform",
+   "name": "공연순위끝판왕",
+   "pkg": "me.yogurthelp.perform",
+   "target": "5.0.5",
+   "play": "5.0.5",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "tool",
+   "name": "도구모음끝판왕",
+   "pkg": "me.yogurthelp.tool",
+   "target": "5.0.0",
+   "play": "3.7.0",
+   "note": "",
+   "status": "local_ahead"
+  },
+  {
+   "key": "election",
+   "name": "선거끝판왕",
+   "pkg": "me.yogurthelp.election",
+   "target": "3.8.3",
+   "play": "3.8.3",
+   "note": "",
+   "status": "same"
+  },
+  {
+   "key": "tour",
+   "name": "여행끝판왕",
+   "pkg": "me.yogurthelp.tour",
+   "target": "5.0.6",
+   "play": "5.0.6",
+   "note": "",
+   "status": "same"
+  }
+ ]
+}

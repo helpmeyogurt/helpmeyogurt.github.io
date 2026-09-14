@@ -1,0 +1,50 @@
+# 구글플레이 라이브 버전 → versions.json (yogurthelp.me/versions.json). 매시 1회.
+# version.html이 이 JSON을 fetch해 표로 렌더. 연속 스냅샷은 amend-squash로 히스토리 최소화.
+name: collect-play-versions
+
+on:
+  schedule:
+    - cron: '10 * * * *'    # 매시 :10
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-play-versions
+  cancel-in-progress: true
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Crawl Play Store versions
+        run: node tools/collect_play_versions.js
+
+      - name: Commit & push (amend-squash)
+        run: |
+          git config user.name 'yogurt'
+          git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
+          git add versions.json
+          git diff --cached --quiet && echo 'no change' && exit 0
+          SUBJ="chore: 마켓 버전 스냅샷"
+          LAST=$(git log -1 --pretty=%s)
+          git commit -m "$SUBJ $(TZ=Asia/Seoul date +%m-%d\ %H:%M)"
+          case "$LAST" in
+            "$SUBJ"*)
+              git reset --soft HEAD~2
+              git commit -m "$SUBJ $(TZ=Asia/Seoul date +%m-%d\ %H:%M)"
+              git push --force-with-lease origin main || { git fetch origin && git rebase origin/main && git push origin main; }
+              ;;
+            *)
+              git push origin main || { git fetch origin && git rebase origin/main && git push origin main; }
+              ;;
+          esac
