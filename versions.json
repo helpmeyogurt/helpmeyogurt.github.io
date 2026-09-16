@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-17 01:46 KST",
+ "generated": "2026-09-17 05:02 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -143,9 +143,9 @@
    "name": "세금정보끝판왕",
    "pkg": "me.yogurthelp.tax",
    "target": "5.0.2",
-   "play": "3.7.0",
+   "play": "5.0.2",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "phone",
