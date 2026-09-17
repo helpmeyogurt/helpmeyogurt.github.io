@@ -73,6 +73,20 @@ function dateKey() { const d = kstNow(); return '' + d.getUTCFullYear() + p2(d.g
     }
     if (rows.length < 20) throw new Error('미국 파싱 부족: ' + rows.length);
     out.usa = rows;
+
+    // FRED 지연 대비: FRED 일별 시계열은 FOMC 결정 당일을 하루쯤 늦게 반영한다.
+    // 기존 파일의 최신 변경점이 FRED 최신보다 더 최근이면(=수동 선반영分) 보존해,
+    // 다음 실행이 그 항목을 지우지 않도록 한다. FRED가 따라잡으면 자연 수렴.
+    const usaKey = r => { const m = (r.date || '').match(/(\d+)월\s*(\d+)일/); return m ? (parseInt(r.year) * 10000 + parseInt(m[1]) * 100 + parseInt(m[2])) : 0; };
+    if (fs.existsSync(OUT)) {
+      try {
+        const prev = JSON.parse(fs.readFileSync(OUT, 'utf8'));
+        if (prev.usa && prev.usa.length && out.usa.length && usaKey(prev.usa[0]) > usaKey(out.usa[0])) {
+          console.log('미국: 기존 최신 변경점(' + prev.usa[0].date + ' ' + prev.usa[0].int + '%)이 FRED보다 최신 — 보존');
+          out.usa = prev.usa;
+        }
+      } catch (e) { /* 무시 */ }
+    }
   }
 
   // 무변경이면 저장 생략 (커밋 폭증 방지) — dateKey가 바뀌면 하루 1회는 저장(신선도 유지)
