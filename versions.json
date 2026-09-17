@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-17 10:19 KST",
+ "generated": "2026-09-17 16:34 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -152,9 +152,9 @@
    "name": "휴대폰끝판왕",
    "pkg": "me.yogurthelp.phone",
    "target": "5.0.0",
-   "play": "3.7.0",
+   "play": "5.0.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "phonemem",
