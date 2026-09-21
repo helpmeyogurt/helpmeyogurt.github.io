@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-22 04:19 KST",
+ "generated": "2026-09-22 08:13 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -125,9 +125,9 @@
    "name": "법률정보끝판왕",
    "pkg": "me.yogurthelp.law",
    "target": "5.0.1",
-   "play": "3.7.0",
+   "play": "5.0.6",
    "note": "",
-   "status": "local_ahead"
+   "status": "market_ahead"
   },
   {
    "key": "salary",
