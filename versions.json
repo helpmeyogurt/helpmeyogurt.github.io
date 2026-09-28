@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-28 07:02 KST",
+ "generated": "2026-09-28 09:36 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -54,7 +54,7 @@
    "pkg": "me.yogurthelp.loan",
    "target": "5.0.0",
    "play": "5.0.0",
-   "note": "",
+   "note": "버전 패턴 미검출",
    "status": "same"
   },
   {
@@ -171,7 +171,7 @@
    "pkg": "me.yogurthelp.car",
    "target": "5.0.5",
    "play": "5.0.5",
-   "note": "",
+   "note": "버전 패턴 미검출",
    "status": "same"
   },
   {
