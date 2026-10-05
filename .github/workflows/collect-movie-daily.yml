@@ -51,7 +51,7 @@ jobs:
         run: |
           git config user.name 'yogurt'
           git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
-          git add movie/daily_boxoffice.json movie/daily_history.json movie/yearly_boxoffice.json movie/mojo_world.json movie/mojo_usa.json movie/critic.json
+          git add movie/daily_boxoffice.json movie/daily_history.json movie/yearly_boxoffice.json movie/alltime_boxoffice.json movie/mojo_world.json movie/mojo_usa.json movie/critic.json
           git diff --cached --quiet && echo 'no change' && exit 0
           git commit -m "movie: 일간/연간 박스오피스 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d\ %H:%M)"
           git push || { git pull --rebase origin main && git push; }

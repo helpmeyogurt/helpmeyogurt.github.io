@@ -24,6 +24,7 @@ const IF_MISSING = _args.includes('--if-missing');
 const DIR = path.dirname(OUT);
 const HIST = path.join(DIR, 'daily_history.json');
 const YEARLY = path.join(DIR, 'yearly_boxoffice.json');
+const ALLTIME = path.join(DIR, 'alltime_boxoffice.json');
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
 const MOVIE_KEY = '5fd330746779bae7ba756ec8fc1acad7'; // KOBIS 오픈API 키 (앱 소스에 이미 공개된 값)
@@ -73,6 +74,29 @@ function parseYearly(html) {
         money: r.split('id="td_salesAcc"')[1].split('>')[1].split('<')[0].trim(),
         person: r.split('id="td_audiAcc"')[1].split('>')[1].split('<')[0].trim(),
         scrn: r.split('id="td_scrnCnt"')[1].replace('<img src="/kobis/web/comm/images/common/ico_seoul.gif" alt="S">', '').split('>')[1].split('<')[0].trim(),
+      });
+    } catch (e) { /* 행 구조가 다르면 스킵 */ }
+  }
+  return out;
+}
+
+// 역대 TOP 20 — findFormerBoxOfficeList.do는 <tr class=".." id="tr_tot0"> 형태라
+// 연간의 split('<tr id="') 규칙이 안 맞음 → td_rank 기준 분해. 셀 id도 연간과 다름
+// (td_totSalesAcc / td_totAudiAcc / td_totScrnCnt).
+function parseAlltime(html) {
+  const out = [];
+  const parts = html.split('id="td_rank"');
+  for (let i = 1; i < parts.length && out.length < 20; i++) {
+    const r = parts[i];
+    try {
+      out.push({
+        rank: r.split('>')[1].split('<')[0].trim(),
+        code: r.split("mstView('movie','")[1].split("'")[0].trim(),
+        title: r.split('title="')[1].split('"')[0].trim(),
+        date: r.split('id="td_openDt"')[1].split('>')[1].split('<')[0].trim(),
+        money: r.split('id="td_totSalesAcc"')[1].split('>')[1].split('<')[0].trim(),
+        person: r.split('id="td_totAudiAcc"')[1].split('>')[1].split('<')[0].trim(),
+        scrn: r.split('id="td_totScrnCnt"')[1].split('>')[1].split('<')[0].trim(),
       });
     } catch (e) { /* 행 구조가 다르면 스킵 */ }
   }
@@ -147,6 +171,33 @@ function parseYearly(html) {
       console.warn('연간: 파싱 결과 부족(' + items.length + '건) — 사이트 개편 가능성, 기존 파일 유지');
     }
   } catch (e) { console.warn('연간 수집 실패(경고만): ' + e.message); }
+
+  // ③-2 역대 TOP 20 ×3 (종합/한국/외국) — 1101 '역대' 탭용.
+  //     기존엔 번들 정적 data_culture_movie.js(all_tot/all_kor/all_for)뿐이라
+  //     수동 갱신 시점(2026.06)에 멈춰 있던 것 → Actions 수집으로 전환.
+  try {
+    const kinds = [['tot', ''], ['kor', 'K'], ['foreign', 'F']];
+    const all = {};
+    for (const [key, nation] of kinds) {
+      const html = await get('https://www.kobis.or.kr/kobis/business/stat/offc/findFormerBoxOfficeList.do?loadEnd=0&searchType=search&sMultiMovieYn=&sRepNationCd=' + nation);
+      const items = parseAlltime(html);
+      if (items.length >= 10) { all[key] = items; }
+      await new Promise(r => setTimeout(r, 400));
+    }
+    if (all.tot && all.kor && all.foreign) {
+      const prev = readJson(ALLTIME, null);
+      const next = { generated: genStamp(), tot: all.tot, kor: all.kor, foreign: all.foreign };
+      if (!prev || JSON.stringify([prev.tot, prev.kor, prev.foreign]) !== JSON.stringify([all.tot, all.kor, all.foreign])) {
+        fs.writeFileSync(ALLTIME, JSON.stringify(next));
+        changed = true;
+        console.log('역대 저장: ' + ALLTIME + ' (종합 1위 ' + all.tot[0].title + ' / 한국 ' + all.kor[0].title + ' / 외국 ' + all.foreign[0].title + ')');
+      } else {
+        console.log('역대: 변경 없음');
+      }
+    } else {
+      console.warn('역대: 일부 파싱 실패(' + Object.keys(all).join(',') + ') — 사이트 개편 가능성, 기존 파일 유지');
+    }
+  } catch (e) { console.warn('역대 수집 실패(경고만): ' + e.message); }
 
   // ④ Box Office Mojo 세계/미국 (연간 현재연도 + 역대 TOP) — 세계(1103)/미국(1102) 탭용.
   //    Mojo는 한국에서 3~4초 걸려 앱이 수집분을 1순위로 씀. 앱 파서를 그대로 재사용하도록
