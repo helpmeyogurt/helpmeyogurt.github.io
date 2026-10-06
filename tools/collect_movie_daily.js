@@ -103,6 +103,42 @@ function parseAlltime(html) {
   return out;
 }
 
+// 포스터 베이크 — 연간/역대 목록은 포스터가 없어 앱이 KOBIS 상세를 건당(300ms 직렬)
+// 조회해 이미지가 늦게 떴음 → 수집 시점에 image/thumb(KOBIS 상대경로)를 채워 넣는다.
+// 포스터는 불변이라 기존 JSON(code→경로) 재사용, 신규 code만 상세 조회.
+// 실패한 항목은 비워 둠(앱 moviePicParser가 그대로 폴백).
+function posterCacheFrom(/* ...objs */) {
+  const cache = {};
+  for (const o of arguments) {
+    if (!o) continue;
+    const lists = o.items ? [o.items] : [o.tot, o.kor, o.foreign].filter(Boolean);
+    for (const list of lists) for (const it of list) {
+      if (it && it.code && it.thumb) cache[it.code] = { image: it.image, thumb: it.thumb };
+    }
+  }
+  return cache;
+}
+async function enrichPosters(items, cache, label) {
+  let fetched = 0, failed = 0;
+  for (const it of items) {
+    if (!it.code || it.thumb) continue;
+    if (cache[it.code]) { it.image = cache[it.code].image; it.thumb = cache[it.code].thumb; continue; }
+    try {
+      const html = await get('https://www.kobis.or.kr/kobis/business/mast/mvie/searchMovieDtl.do?code=' + it.code + '&sType=&titleYN=Y&etcParam=&isOuterReq=false');
+      // 앱(moviePicParser)과 동일한 분해 규칙
+      if (html.indexOf('onclick="open(') !== -1) {
+        const info = html.split('<div class="ovf info info1">')[1];
+        it.image = info.split('href="')[1].split('"')[0].trim();
+        it.thumb = info.split('src="')[1].split('"')[0].trim();
+        cache[it.code] = { image: it.image, thumb: it.thumb };
+        fetched++;
+      } else { failed++; }
+      await new Promise(r => setTimeout(r, 300));
+    } catch (e) { failed++; }
+  }
+  if (fetched || failed) console.log(label + ' 포스터: 신규 ' + fetched + '건 수집' + (failed ? ', 실패 ' + failed + '건(앱 폴백)' : ''));
+}
+
 (async () => {
   fs.mkdirSync(DIR, { recursive: true });
   const hist = readJson(HIST, {});
@@ -159,6 +195,7 @@ function parseAlltime(html) {
     const items = parseYearly(html);
     if (items.length >= 10) {
       const prev = readJson(YEARLY, null);
+      await enrichPosters(items, posterCacheFrom(prev, readJson(ALLTIME, null)), '연간');
       const next = { year: '' + kstNow().getUTCFullYear(), generated: genStamp(), items };
       if (!prev || JSON.stringify(prev.items) !== JSON.stringify(items)) {
         fs.writeFileSync(YEARLY, JSON.stringify(next));
@@ -186,6 +223,8 @@ function parseAlltime(html) {
     }
     if (all.tot && all.kor && all.foreign) {
       const prev = readJson(ALLTIME, null);
+      const cache = posterCacheFrom(prev, readJson(YEARLY, null));
+      for (const k of ['tot', 'kor', 'foreign']) { await enrichPosters(all[k], cache, '역대(' + k + ')'); }
       const next = { generated: genStamp(), tot: all.tot, kor: all.kor, foreign: all.foreign };
       if (!prev || JSON.stringify([prev.tot, prev.kor, prev.foreign]) !== JSON.stringify([all.tot, all.kor, all.foreign])) {
         fs.writeFileSync(ALLTIME, JSON.stringify(next));
