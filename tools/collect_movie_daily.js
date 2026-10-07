@@ -222,6 +222,39 @@ async function enrichPosters(items, cache, label) {
       await new Promise(r => setTimeout(r, 400));
     }
     if (all.tot && all.kor && all.foreign) {
+      // 상영 중 영화 누적 보정 — KOBIS 역대 공식통계 페이지는 상영 중 영화의 누적
+      // 반영이 지연됨(실측: 오디세이 역대 901만 vs 일간 확정 1,205만 → 40위로 왜곡).
+      // 일간 확정분(totalAudiCnt/totalSalesAmt)이 더 크면 그 값으로 패치 후 재정렬·재순위.
+      // 일간 히스토리 전체에서 코드별 최대 누적 수집 (openapi 백필분은 audiAcc/salesAcc 필드)
+      const dMap = {};
+      const histAll = readJson(HIST, {});
+      const collectDaily = (items) => {
+        for (const it of items || []) {
+          const audi = +(it.totalAudiCnt != null ? it.totalAudiCnt : it.audiAcc) || 0;
+          const sales = +(it.totalSalesAmt != null ? it.totalSalesAmt : it.salesAcc) || 0;
+          if (it.movieCd && audi > ((dMap[it.movieCd] || {}).audi || 0)) dMap[it.movieCd] = { audi, sales };
+        }
+      };
+      for (const day of Object.keys(histAll)) collectDaily(histAll[day].items);
+      collectDaily((readJson(OUT, null) || {}).items);
+      const num = s => +String(s).replace(/[^0-9]/g, '') || 0;
+      const fmt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      for (const k of ['tot', 'kor', 'foreign']) {
+        let patched = 0;
+        for (const it of all[k]) {
+          const d = dMap[it.code];
+          if (d && d.audi > num(it.person)) {
+            it.person = fmt(d.audi);
+            if (d.sales > num(it.money)) it.money = fmt(d.sales);
+            patched++;
+          }
+        }
+        if (patched) {
+          all[k].sort((a, b) => num(b.person) - num(a.person));
+          all[k].forEach((it, i) => { it.rank = '' + (i + 1); });
+          console.log('역대(' + k + ') 상영작 누적 보정 ' + patched + '건 → 재정렬');
+        }
+      }
       const prev = readJson(ALLTIME, null);
       const cache = posterCacheFrom(prev, readJson(YEARLY, null));
       for (const k of ['tot', 'kor', 'foreign']) { await enrichPosters(all[k], cache, '역대(' + k + ')'); }
