@@ -59,11 +59,11 @@ function genStamp() {
 }
 function readJson(f, dflt) { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return dflt; } }
 
-// 연간 TOP 20 — 렌더러(ygt_culture_movie.js dataParserYear)와 동일한 분해 규칙
+// 연간 TOP 50 — 렌더러(ygt_culture_movie.js dataParserYear)와 동일한 분해 규칙
 function parseYearly(html) {
   const out = [];
   const parts = html.split('<tr id="');
-  for (let i = 1; i < parts.length && out.length < 20; i++) {
+  for (let i = 1; i < parts.length && out.length < 50; i++) {
     const r = parts[i];
     try {
       out.push({
@@ -80,13 +80,13 @@ function parseYearly(html) {
   return out;
 }
 
-// 역대 TOP 20 — findFormerBoxOfficeList.do는 <tr class=".." id="tr_tot0"> 형태라
+// 역대 TOP 50 — findFormerBoxOfficeList.do는 <tr class=".." id="tr_tot0"> 형태라
 // 연간의 split('<tr id="') 규칙이 안 맞음 → td_rank 기준 분해. 셀 id도 연간과 다름
 // (td_totSalesAcc / td_totAudiAcc / td_totScrnCnt).
 function parseAlltime(html) {
   const out = [];
   const parts = html.split('id="td_rank"');
-  for (let i = 1; i < parts.length && out.length < 20; i++) {
+  for (let i = 1; i < parts.length && out.length < 50; i++) {
     const r = parts[i];
     try {
       out.push({
@@ -189,7 +189,7 @@ async function enrichPosters(items, cache, label) {
     } catch (e) { console.log('백필 ' + k + ' 실패: ' + e.message); }
   }
 
-  // ③ 연간 TOP 20 (연간 탭의 KOBIS 장애 폴백)
+  // ③ 연간 TOP 50 (연간 탭의 KOBIS 장애 폴백)
   try {
     const html = await get('https://www.kobis.or.kr/kobis/business/stat/boxs/findYearlyBoxOfficeList.do?loadEnd=0&searchType=search&sMultiMovieYn=&sRepNationCd=');
     const items = parseYearly(html);
@@ -209,7 +209,7 @@ async function enrichPosters(items, cache, label) {
     }
   } catch (e) { console.warn('연간 수집 실패(경고만): ' + e.message); }
 
-  // ③-2 역대 TOP 20 ×3 (종합/한국/외국) — 1101 '역대' 탭용.
+  // ③-2 역대 TOP 50 ×3 (종합/한국/외국) — 1101 '역대' 탭용.
   //     기존엔 번들 정적 data_culture_movie.js(all_tot/all_kor/all_for)뿐이라
   //     수동 갱신 시점(2026.06)에 멈춰 있던 것 → Actions 수집으로 전환.
   try {
