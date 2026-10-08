@@ -21,7 +21,7 @@ const APPS = [
   { key: 'realtytrade', name: '실거래가끝판왕', pkg: 'me.yogurthelp.realtytrade', target: '5.0.5' },
   { key: 'realtyprice', name: '공시가격끝판왕', pkg: 'me.yogurthelp.realtyprice', target: '5.0.5' },
   { key: 'realtycal', name: '부동산계산기끝판왕', pkg: 'me.yogurthelp.realtycal', target: '5.0.5' },
-  { key: 'realtydata', name: '부동산정보끝판왕', pkg: 'me.yogurthelp.realtydata', target: '5.0.6' },
+  { key: 'realtydata', name: '부동산정보끝판왕', pkg: 'me.yogurthelp.realtydata', target: '5.0.7' },
   { key: 'law', name: '법률정보끝판왕', pkg: 'me.yogurthelp.law', target: '5.0.1' },
   { key: 'salary', name: '월급계산기끝판왕', pkg: 'me.yogurthelp.salary', target: '5.0.5' },
   { key: 'tax', name: '세금정보끝판왕', pkg: 'me.yogurthelp.tax', target: '5.0.2' },
