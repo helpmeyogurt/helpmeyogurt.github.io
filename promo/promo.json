@@ -1,12 +1,12 @@
 {
- "ver": 1,
+ "ver": 2,
  "enabled": true,
  "apps": [
   {
    "key": "weather",
    "pkg": "me.yogurthelp.weather",
    "img": "banners/weather.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -14,7 +14,7 @@
    "key": "news",
    "pkg": "me.yogurthelp.news",
    "img": "banners/news.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -22,7 +22,7 @@
    "key": "tel",
    "pkg": "me.yogurthelp.tel",
    "img": "banners/tel.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -30,7 +30,7 @@
    "key": "intrate",
    "pkg": "me.yogurthelp.intrate",
    "img": "banners/intrate.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -38,7 +38,7 @@
    "key": "dep",
    "pkg": "me.yogurthelp.dep",
    "img": "banners/dep.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -46,7 +46,7 @@
    "key": "loan",
    "pkg": "me.yogurthelp.loan",
    "img": "banners/loan.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -54,7 +54,7 @@
    "key": "finance",
    "pkg": "me.yogurthelp.finance",
    "img": "banners/finance.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -62,7 +62,7 @@
    "key": "stock",
    "pkg": "me.yogurthelp.stock",
    "img": "banners/stock.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -70,7 +70,7 @@
    "key": "exchange",
    "pkg": "me.yogurthelp.exchange",
    "img": "banners/exchange.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -78,7 +78,7 @@
    "key": "realtytrade",
    "pkg": "me.yogurthelp.realtytrade",
    "img": "banners/realtytrade.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -86,7 +86,7 @@
    "key": "realtyprice",
    "pkg": "me.yogurthelp.realtyprice",
    "img": "banners/realtyprice.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -94,7 +94,7 @@
    "key": "realtycal",
    "pkg": "me.yogurthelp.realtycal",
    "img": "banners/realtycal.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -102,7 +102,7 @@
    "key": "realtydata",
    "pkg": "me.yogurthelp.realtydata",
    "img": "banners/realtydata.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -110,7 +110,7 @@
    "key": "law",
    "pkg": "me.yogurthelp.law",
    "img": "banners/law.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -118,7 +118,7 @@
    "key": "salary",
    "pkg": "me.yogurthelp.salary",
    "img": "banners/salary.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -126,7 +126,7 @@
    "key": "tax",
    "pkg": "me.yogurthelp.tax",
    "img": "banners/tax.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -134,7 +134,7 @@
    "key": "phone",
    "pkg": "me.yogurthelp.phone",
    "img": "banners/phone.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -142,7 +142,7 @@
    "key": "phonemem",
    "pkg": "me.yogurthelp.phonemem",
    "img": "banners/phonemem.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -150,7 +150,7 @@
    "key": "car",
    "pkg": "me.yogurthelp.car",
    "img": "banners/car.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -158,7 +158,7 @@
    "key": "movie",
    "pkg": "me.yogurthelp.movie",
    "img": "banners/movie.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -166,7 +166,7 @@
    "key": "tv",
    "pkg": "me.yogurthelp.tv",
    "img": "banners/tv.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -174,7 +174,7 @@
    "key": "music",
    "pkg": "me.yogurthelp.music",
    "img": "banners/music.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -182,7 +182,7 @@
    "key": "book",
    "pkg": "me.yogurthelp.book",
    "img": "banners/book.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -190,7 +190,7 @@
    "key": "perform",
    "pkg": "me.yogurthelp.perform",
    "img": "banners/perform.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -198,7 +198,7 @@
    "key": "tool",
    "pkg": "me.yogurthelp.tool",
    "img": "banners/tool.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -206,7 +206,7 @@
    "key": "election",
    "pkg": "me.yogurthelp.election",
    "img": "banners/election.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   },
@@ -214,7 +214,7 @@
    "key": "tour",
    "pkg": "me.yogurthelp.tour",
    "img": "banners/tour.webp",
-   "imgVer": 1,
+   "imgVer": 2,
    "weight": 1,
    "enabled": true
   }
