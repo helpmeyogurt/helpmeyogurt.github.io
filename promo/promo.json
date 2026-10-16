@@ -1,5 +1,5 @@
 {
- "ver": 6,
+ "ver": 7,
  "enabled": true,
  "apps": [
   {
@@ -501,35 +501,31 @@
    },
    "1001": {
     "after": 6,
-    "sel": "ul.list_tel li.list_item"
+    "sel": "li.list_item"
    },
    "1002": {
     "after": 6,
-    "sel": "ul.list_tel li.list_item"
-   },
-   "1003": {
-    "after": 6,
-    "sel": "ul.list_tel li.list_item"
+    "sel": "li.list_item"
    },
    "1004": {
     "after": 6,
-    "sel": "ul.list_tel li.list_item"
+    "sel": "li.list_item"
    },
    "1005": {
     "after": 6,
-    "sel": "ul.list_tel li.list_item"
+    "sel": "li.list_item"
    },
    "1006": {
     "after": 6,
-    "sel": "ul.list_tel li.list_item"
+    "sel": "li.list_item"
    },
    "1007": {
     "after": 6,
-    "sel": "ul.list_tel li.list_item"
+    "sel": "li.list_item"
    },
    "1008": {
     "after": 6,
-    "sel": "ul.list_tel li.list_item"
+    "sel": "li.list_item"
    },
    "1301": {
     "after": 6,
