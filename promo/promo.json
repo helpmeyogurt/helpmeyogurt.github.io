@@ -1,5 +1,5 @@
 {
- "ver": 8,
+ "ver": 9,
  "enabled": true,
  "apps": [
   {
@@ -600,7 +600,7 @@
     "sel": "ul.rankList li.list_item"
    },
    "0405": {
-    "after": 6,
+    "after": 4,
     "sel": "ul.indexList li"
    },
    "0406": {
