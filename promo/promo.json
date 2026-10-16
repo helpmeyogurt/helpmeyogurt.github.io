@@ -1,5 +1,5 @@
 {
- "ver": 2,
+ "ver": 3,
  "enabled": true,
  "apps": [
   {
@@ -8,7 +8,10 @@
    "img": "banners/weather.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/weather.png",
+   "label": "날씨끝판왕",
+   "headline": "내일 비 와요? 우산은 3초면 확인"
   },
   {
    "key": "news",
@@ -16,7 +19,10 @@
    "img": "banners/news.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/news.png",
+   "label": "뉴스끝판왕",
+   "headline": "다들 아는 뉴스, 나만 몰랐다면?"
   },
   {
    "key": "tel",
@@ -24,7 +30,10 @@
    "img": "banners/tel.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/tel.png",
+   "label": "전화번호끝판왕",
+   "headline": "보이스피싱 전화? 신고번호 바로 여기"
   },
   {
    "key": "intrate",
@@ -32,7 +41,10 @@
    "img": "banners/intrate.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/intrate.png",
+   "label": "금리끝판왕",
+   "headline": "금리 또 바뀌었대, 내 적금 괜찮을까?"
   },
   {
    "key": "dep",
@@ -40,7 +52,10 @@
    "img": "banners/dep.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/dep.png",
+   "label": "예금금리끝판왕",
+   "headline": "같은 돈, 은행만 바꿔도 이자가 달라요"
   },
   {
    "key": "loan",
@@ -48,7 +63,10 @@
    "img": "banners/loan.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/loan.png",
+   "label": "대출금리끝판왕",
+   "headline": "대출 갈아탈 타이밍, 금리가 알려줘요"
   },
   {
    "key": "finance",
@@ -56,7 +74,10 @@
    "img": "banners/finance.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/finance.png",
+   "label": "금융끝판왕",
+   "headline": "내 또래는 얼마 모았을까? 랭킹 확인"
   },
   {
    "key": "stock",
@@ -64,7 +85,10 @@
    "img": "banners/stock.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/stock.png",
+   "label": "주가지수끝판왕",
+   "headline": "자기 전 나스닥, 아침엔 코스피 체크"
   },
   {
    "key": "exchange",
@@ -72,7 +96,10 @@
    "img": "banners/exchange.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/exchange.png",
+   "label": "환율끝판왕",
+   "headline": "환전, 오늘 할까 내일 할까?"
   },
   {
    "key": "realtytrade",
@@ -80,7 +107,10 @@
    "img": "banners/realtytrade.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/realtytrade.png",
+   "label": "실거래가끝판왕",
+   "headline": "옆집은 얼마에 팔렸을까?"
   },
   {
    "key": "realtyprice",
@@ -88,7 +118,10 @@
    "img": "banners/realtyprice.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/realtyprice.png",
+   "label": "공시가격끝판왕",
+   "headline": "보유세 걱정되면 공시가격부터"
   },
   {
    "key": "realtycal",
@@ -96,7 +129,10 @@
    "img": "banners/realtycal.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/realtycal.png",
+   "label": "부동산계산기끝판왕",
+   "headline": "집 팔기 전, 양도세부터 계산"
   },
   {
    "key": "realtydata",
@@ -104,7 +140,10 @@
    "img": "banners/realtydata.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/realtydata.png",
+   "label": "부동산정보끝판왕",
+   "headline": "지금 집 살 때일까? 지수가 답해요"
   },
   {
    "key": "law",
@@ -112,7 +151,10 @@
    "img": "banners/law.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/law.png",
+   "label": "법률정보끝판왕",
+   "headline": "전세 계약 전 10분이 보증금 지켜요"
   },
   {
    "key": "salary",
@@ -120,7 +162,10 @@
    "img": "banners/salary.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/salary.png",
+   "label": "월급계산기끝판왕",
+   "headline": "연봉 협상 전, 실수령액부터 확인"
   },
   {
    "key": "tax",
@@ -128,7 +173,10 @@
    "img": "banners/tax.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/tax.png",
+   "label": "세금정보끝판왕",
+   "headline": "세금 고지서에 당황하기 전에"
   },
   {
    "key": "phone",
@@ -136,7 +184,10 @@
    "img": "banners/phone.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/phone.png",
+   "label": "휴대폰끝판왕",
+   "headline": "폰 바꾸기 전, 요금제부터 비교"
   },
   {
    "key": "phonemem",
@@ -144,7 +195,10 @@
    "img": "banners/phonemem.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/phonemem.png",
+   "label": "휴대폰멤버십끝판왕",
+   "headline": "이번 달 멤버십 쿠폰, 안 쓰면 끝"
   },
   {
    "key": "car",
@@ -152,7 +206,10 @@
    "img": "banners/car.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/car.png",
+   "label": "자동차순위끝판왕",
+   "headline": "요즘 다들 무슨 차 살까?"
   },
   {
    "key": "movie",
@@ -160,7 +217,10 @@
    "img": "banners/movie.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/movie.png",
+   "label": "박스오피스끝판왕",
+   "headline": "주말에 뭐 보지? 1위부터 확인"
   },
   {
    "key": "tv",
@@ -168,7 +228,10 @@
    "img": "banners/tv.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/tv.png",
+   "label": "시청률끝판왕",
+   "headline": "어제 그 드라마, 시청률 몇일까?"
   },
   {
    "key": "music",
@@ -176,7 +239,10 @@
    "img": "banners/music.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/music.png",
+   "label": "음원차트끝판왕",
+   "headline": "요즘 뭐 듣지? 차트가 답"
   },
   {
    "key": "book",
@@ -184,7 +250,10 @@
    "img": "banners/book.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/book.png",
+   "label": "베스트셀러끝판왕",
+   "headline": "다들 읽는 그 책, 뭐길래?"
   },
   {
    "key": "perform",
@@ -192,7 +261,10 @@
    "img": "banners/perform.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/perform.png",
+   "label": "공연순위끝판왕",
+   "headline": "주말 데이트, 뜨는 공연 어때요?"
   },
   {
    "key": "tool",
@@ -200,7 +272,10 @@
    "img": "banners/tool.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/tool.png",
+   "label": "도구모음끝판왕",
+   "headline": "급할 때 찾는 도구, 여기 다 있어요"
   },
   {
    "key": "election",
@@ -208,7 +283,10 @@
    "img": "banners/election.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/election.png",
+   "label": "선거끝판왕",
+   "headline": "투표 전, 우리 동네 후보 아세요?"
   },
   {
    "key": "tour",
@@ -216,7 +294,10 @@
    "img": "banners/tour.webp",
    "imgVer": 2,
    "weight": 1,
-   "enabled": true
+   "enabled": true,
+   "icon": "icons/tour.png",
+   "label": "여행끝판왕",
+   "headline": "연휴에 어디 가지? 100선에서 골라요"
   }
  ]
 }
