@@ -1,5 +1,5 @@
 {
- "ver": 5,
+ "ver": 6,
  "enabled": true,
  "apps": [
   {
@@ -445,27 +445,27 @@
    },
    "0901": {
     "after": 6,
-    "sel": "ul.list_world li.w_item"
+    "sel": "ul.list_car li.list_item"
    },
    "0902": {
     "after": 6,
-    "sel": "ul.list_world li.w_item"
+    "sel": "table.tableCar tr+tr"
    },
    "0903": {
     "after": 6,
-    "sel": "ul.list_world li.w_item"
+    "sel": "table.tableCar tr+tr"
    },
    "0904": {
     "after": 6,
-    "sel": "ul.list_world li.w_item"
+    "sel": "table.tableCar tr+tr"
    },
    "0905": {
     "after": 6,
-    "sel": "ul.list_world li.w_item"
+    "sel": "table.tableCar tr+tr"
    },
    "0906": {
     "after": 6,
-    "sel": "ul.list_world li.w_item"
+    "sel": "table.tableCar tr+tr"
    },
    "0907": {
     "after": 6,
