@@ -1,5 +1,5 @@
 {
- "ver": 9,
+ "ver": 10,
  "enabled": true,
  "apps": [
   {
@@ -612,7 +612,7 @@
     "sel": "ul.indexList2 li"
    },
    "0801": {
-    "after": 4,
+    "after": 3,
     "sel": "div.slidebox"
    },
    "0804": {
