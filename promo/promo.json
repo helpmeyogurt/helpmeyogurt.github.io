@@ -309,9 +309,6 @@
    "0302": {
     "after": 6
    },
-   "0303": {
-    "after": 6
-   },
    "0304": {
     "after": 6
    },
@@ -334,7 +331,8 @@
     "after": 6
    },
    "0316": {
-    "after": 6
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
    },
    "0317": {
     "after": 6
