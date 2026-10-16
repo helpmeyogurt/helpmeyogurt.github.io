@@ -344,6 +344,26 @@
    },
    "0399": {
     "after": 6
+   },
+   "0308": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "0309": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "0310": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "0311": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "0312": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
    }
   }
  }
