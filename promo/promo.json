@@ -1,5 +1,5 @@
 {
- "ver": 7,
+ "ver": 8,
  "enabled": true,
  "apps": [
   {
@@ -582,6 +582,78 @@
    "0108": {
     "after": 6,
     "sel": "ul.list_press li.list_item"
+   },
+   "0401": {
+    "after": 6,
+    "sel": "table.tableBank tbody tr"
+   },
+   "0402": {
+    "after": 6,
+    "sel": "table.tableBank tbody tr"
+   },
+   "0403": {
+    "after": 6,
+    "sel": "table.tableBank tbody tr"
+   },
+   "0404": {
+    "after": 6,
+    "sel": "ul.rankList li.list_item"
+   },
+   "0405": {
+    "after": 6,
+    "sel": "ul.indexList li"
+   },
+   "0406": {
+    "after": 6,
+    "sel": "ul.indexList li"
+   },
+   "0410": {
+    "after": 6,
+    "sel": "ul.indexList2 li"
+   },
+   "0801": {
+    "after": 4,
+    "sel": "div.slidebox"
+   },
+   "0804": {
+    "after": 6,
+    "sel": "div.slidebox"
+   },
+   "0501": {
+    "after": 6,
+    "sel": "table.realtyTable tr+tr"
+   },
+   "0502": {
+    "after": 6,
+    "sel": "table.realtyTable tr+tr"
+   },
+   "0504": {
+    "after": 6,
+    "sel": "#result tr"
+   },
+   "0505": {
+    "after": 6,
+    "sel": "#result tr"
+   },
+   "0506": {
+    "after": 6,
+    "sel": "#result tr"
+   },
+   "0515": {
+    "after": 6,
+    "sel": "#result tr"
+   },
+   "0516": {
+    "after": 6,
+    "sel": "#result tr"
+   },
+   "0520": {
+    "after": 6,
+    "sel": "#result tr"
+   },
+   "0530": {
+    "after": 6,
+    "sel": "#result tr"
    }
   }
  }
