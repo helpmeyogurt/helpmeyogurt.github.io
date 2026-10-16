@@ -1,5 +1,5 @@
 {
- "ver": 4,
+ "ver": 5,
  "enabled": true,
  "apps": [
   {
@@ -362,6 +362,230 @@
    "0312": {
     "after": 6,
     "sel": "ul.list_tel li.list_item"
+   },
+   "1101": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1102": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1103": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1104": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1111": {
+    "after": 6,
+    "sel": "ul.list_TV li.list_item"
+   },
+   "1112": {
+    "after": 6,
+    "sel": "ul.list_TV li.list_item"
+   },
+   "1113": {
+    "after": 6,
+    "sel": "ul.list_TV li.list_item"
+   },
+   "1114": {
+    "after": 6,
+    "sel": "ul.list_TV li.list_item"
+   },
+   "1115": {
+    "after": 6,
+    "sel": "ul.list_TV li.list_item"
+   },
+   "1121": {
+    "after": 6,
+    "sel": "ul.list_music li.list_item"
+   },
+   "1122": {
+    "after": 6,
+    "sel": "ul.list_music li.list_item"
+   },
+   "1123": {
+    "after": 6,
+    "sel": "ul.list_music li.list_item"
+   },
+   "1124": {
+    "after": 6,
+    "sel": "ul.list_music li.list_item"
+   },
+   "1125": {
+    "after": 6,
+    "sel": "ul.list_music li.list_item"
+   },
+   "1126": {
+    "after": 6,
+    "sel": "ul.list_music li.list_item"
+   },
+   "1131": {
+    "after": 6,
+    "sel": "ul.list_book li.list_item"
+   },
+   "1132": {
+    "after": 6,
+    "sel": "ul.list_book li.list_item"
+   },
+   "1133": {
+    "after": 6,
+    "sel": "ul.list_book li.list_item"
+   },
+   "1134": {
+    "after": 6,
+    "sel": "ul.list_book li.list_item"
+   },
+   "1141": {
+    "after": 6,
+    "sel": "ul.list_perform li.list_item"
+   },
+   "0901": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0902": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0903": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0904": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0905": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0906": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0907": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0908": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0909": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0910": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0911": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0912": {
+    "after": 6,
+    "sel": "ul.list_world li.w_item"
+   },
+   "0913": {
+    "after": 6,
+    "sel": "ul.list_car li.list_item"
+   },
+   "0914": {
+    "after": 6,
+    "sel": "ul.list_certi li.c_item"
+   },
+   "1001": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1002": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1003": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1004": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1005": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1006": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1007": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1008": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "1301": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1302": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1303": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1304": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1306": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "1311": {
+    "after": 6,
+    "sel": "ul.list_movie li.list_item"
+   },
+   "0531": {
+    "after": 6,
+    "sel": "li.list_item"
+   },
+   "0532": {
+    "after": 6,
+    "sel": "li.list_item"
+   },
+   "0533": {
+    "after": 6,
+    "sel": "li.list_item"
+   },
+   "0534": {
+    "after": 6,
+    "sel": "li.list_item"
+   },
+   "0535": {
+    "after": 6,
+    "sel": "li.list_item"
+   },
+   "0808": {
+    "after": 6,
+    "sel": "ul.list_tel li.list_item"
+   },
+   "0102": {
+    "after": 6,
+    "sel": "ul.rankList li.rankRow"
+   },
+   "0108": {
+    "after": 6,
+    "sel": "ul.list_press li.list_item"
    }
   }
  }
