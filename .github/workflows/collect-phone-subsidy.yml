@@ -1,0 +1,50 @@
+# 공시지원금(스마트초이스) → phone/support.json. 커밋 메시지는 무브랜드 정책.
+# 공시는 수시 변경·신기종 수시 등록 — 주 2회(월·목 KST 새벽) 수집.
+# 서버렌더 POST 파싱이라 Playwright(chromium) 필요.
+name: collect-phone-subsidy
+
+on:
+  schedule:
+    - cron: '35 20 * * 0,3'   # KST 월·목 05:35
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-phone-subsidy
+  cancel-in-progress: true
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install playwright
+        run: |
+          npm i --no-save playwright@1.49.0
+          npx playwright install --with-deps chromium
+
+      - name: Collect subsidies
+        run: |
+          for i in 1 2; do
+            node tools/collect_phone_subsidy.js phone/support.json && exit 0
+            echo "attempt $i failed; retrying in 120s"
+            sleep 120
+          done
+          exit 1
+
+      - name: Commit & push
+        run: |
+          git config user.name 'yogurt'
+          git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
+          git add phone/
+          git diff --cached --quiet && echo 'no change' && exit 0
+          git commit -m "phone: 공시지원금 갱신 $(TZ=Asia/Seoul date +%m-%d)"
+          git push origin main \
+            || { git fetch origin && git rebase origin/main && git push origin main; }
