@@ -1,5 +1,5 @@
 {
- "ver": 10,
+ "ver": 11,
  "enabled": true,
  "apps": [
   {
@@ -302,6 +302,7 @@
  ],
  "inline": {
   "enabled": true,
+  "native": false,
   "pages": {
    "0301": {
     "after": 6
