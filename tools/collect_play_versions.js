@@ -9,9 +9,9 @@ const fs = require('fs');
 
 // 앱 목록(pkg·한글명) + target(우리 버전). flutter repo build.gradle.kts에서 추출(2026-09-14).
 const APPS = [
-  { key: 'weather', name: '날씨끝판왕', pkg: 'me.yogurthelp.weather', target: '5.1.1' },
+  { key: 'weather', name: '날씨끝판왕', pkg: 'me.yogurthelp.weather', target: '5.2.0' },
   { key: 'news', name: '뉴스끝판왕', pkg: 'me.yogurthelp.news', target: '5.0.8' },
-  { key: 'tel', name: '전화번호끝판왕', pkg: 'me.yogurthelp.tel', target: '5.0.2' },
+  { key: 'tel', name: '전화번호끝판왕', pkg: 'me.yogurthelp.tel', target: '5.2.0' },
   { key: 'intrate', name: '금리끝판왕', pkg: 'me.yogurthelp.intrate', target: '5.0.1' },
   { key: 'dep', name: '예금금리끝판왕', pkg: 'me.yogurthelp.dep', target: '5.0.1' },
   { key: 'loan', name: '대출금리끝판왕', pkg: 'me.yogurthelp.loan', target: '5.0.1' },
@@ -25,7 +25,7 @@ const APPS = [
   { key: 'law', name: '법률정보끝판왕', pkg: 'me.yogurthelp.law', target: '5.0.7' },
   { key: 'salary', name: '월급계산기끝판왕', pkg: 'me.yogurthelp.salary', target: '5.0.6' },
   { key: 'tax', name: '세금정보끝판왕', pkg: 'me.yogurthelp.tax', target: '5.0.3' },
-  { key: 'phone', name: '휴대폰끝판왕', pkg: 'me.yogurthelp.phone', target: '5.0.1' },
+  { key: 'phone', name: '휴대폰끝판왕', pkg: 'me.yogurthelp.phone', target: '5.2.0' },
   { key: 'phonemem', name: '휴대폰멤버십끝판왕', pkg: 'me.yogurthelp.phonemem', target: '5.0.2' },
   { key: 'car', name: '자동차순위끝판왕', pkg: 'me.yogurthelp.car', target: '5.0.6' },
   { key: 'movie', name: '박스오피스끝판왕', pkg: 'me.yogurthelp.movie', target: '5.0.7' },
