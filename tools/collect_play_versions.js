@@ -10,7 +10,7 @@ const fs = require('fs');
 // 앱 목록(pkg·한글명) + target(우리 버전). flutter repo build.gradle.kts에서 추출(2026-09-14).
 const APPS = [
   { key: 'weather', name: '날씨끝판왕', pkg: 'me.yogurthelp.weather', target: '5.2.0' },
-  { key: 'news', name: '뉴스끝판왕', pkg: 'me.yogurthelp.news', target: '5.0.8' },
+  { key: 'news', name: '뉴스끝판왕', pkg: 'me.yogurthelp.news', target: '5.2.0' },
   { key: 'tel', name: '전화번호끝판왕', pkg: 'me.yogurthelp.tel', target: '5.2.0' },
   { key: 'intrate', name: '금리끝판왕', pkg: 'me.yogurthelp.intrate', target: '5.2.0' },
   { key: 'dep', name: '예금금리끝판왕', pkg: 'me.yogurthelp.dep', target: '5.2.0' },
