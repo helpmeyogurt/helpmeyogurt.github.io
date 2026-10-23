@@ -1,5 +1,5 @@
 {
- "ver": 11,
+ "ver": 12,
  "enabled": true,
  "apps": [
   {
@@ -582,7 +582,7 @@
    },
    "0108": {
     "after": 6,
-    "sel": "ul.list_press li.list_item"
+    "sel": "ul.list_TV li.list_item"
    },
    "0401": {
     "after": 6,
