@@ -15,7 +15,7 @@ const APPS = [
   { key: 'intrate', name: '금리끝판왕', pkg: 'me.yogurthelp.intrate', target: '5.2.0' },
   { key: 'dep', name: '예금금리끝판왕', pkg: 'me.yogurthelp.dep', target: '5.2.0' },
   { key: 'loan', name: '대출금리끝판왕', pkg: 'me.yogurthelp.loan', target: '5.2.0' },
-  { key: 'finance', name: '금융끝판왕', pkg: 'me.yogurthelp.finance', target: '5.0.6' },
+  { key: 'finance', name: '금융끝판왕', pkg: 'me.yogurthelp.finance', target: '5.2.0' },
   { key: 'stock', name: '주가지수끝판왕', pkg: 'me.yogurthelp.stock', target: '5.0.6' },
   { key: 'exchange', name: '환율끝판왕', pkg: 'me.yogurthelp.exchange', target: '5.0.6' },
   { key: 'realtytrade', name: '실거래가끝판왕', pkg: 'me.yogurthelp.realtytrade', target: '5.0.6' },
