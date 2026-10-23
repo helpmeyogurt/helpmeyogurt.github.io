@@ -1,5 +1,5 @@
 {
- "ver": 12,
+ "ver": 13,
  "enabled": true,
  "apps": [
   {
@@ -602,11 +602,19 @@
    },
    "0405": {
     "after": 4,
-    "sel": "ul.indexList li"
+    "sel": "ul.indexList li",
+    "noScope": [
+     "content1",
+     "content2",
+     "content3"
+    ]
    },
    "0406": {
     "after": 6,
-    "sel": "ul.indexList li"
+    "sel": "ul.indexList li",
+    "noScope": [
+     "content1"
+    ]
    },
    "0410": {
     "after": 6,
