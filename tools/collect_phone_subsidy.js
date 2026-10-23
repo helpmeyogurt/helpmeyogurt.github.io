@@ -19,8 +19,8 @@ const tierNum = (t) => { const m = (t || '').match(/([0-9.]+)\s*만/); return m 
   const out = process.argv[2] || 'phone/support.json';
   const kst = new Date(Date.now() + 9 * 3600 * 1000);
   const p = (n) => (n < 10 ? '0' : '') + n;
-  const today = kst.getUTCFullYear() + '-' + p(kst.getUTCMonth() + 1) + '-' + p(kst.getUTCDate());
-  const dateKey = today.replace(/-/g, '');
+  const today = kst.getUTCFullYear() + '.' + p(kst.getUTCMonth() + 1) + '.' + p(kst.getUTCDate());
+  const dateKey = today.replace(/\./g, '');
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ locale: 'ko-KR' });
