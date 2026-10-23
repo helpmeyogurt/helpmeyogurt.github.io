@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-23 10:26 KST",
+ "generated": "2026-10-23 16:22 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -8,15 +8,15 @@
    "name": "날씨끝판왕",
    "pkg": "me.yogurthelp.weather",
    "target": "5.2.0",
-   "play": "5.1.0",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "news",
    "name": "뉴스끝판왕",
    "pkg": "me.yogurthelp.news",
-   "target": "5.0.8",
+   "target": "5.2.0",
    "play": "5.0.7",
    "note": "",
    "status": "local_ahead"
@@ -26,15 +26,15 @@
    "name": "전화번호끝판왕",
    "pkg": "me.yogurthelp.tel",
    "target": "5.2.0",
-   "play": "5.0.1",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "intrate",
    "name": "금리끝판왕",
    "pkg": "me.yogurthelp.intrate",
-   "target": "5.0.1",
+   "target": "5.2.0",
    "play": "5.0.0",
    "note": "",
    "status": "local_ahead"
@@ -43,7 +43,7 @@
    "key": "dep",
    "name": "예금금리끝판왕",
    "pkg": "me.yogurthelp.dep",
-   "target": "5.0.1",
+   "target": "5.2.0",
    "play": "5.0.0",
    "note": "",
    "status": "local_ahead"
@@ -52,7 +52,7 @@
    "key": "loan",
    "name": "대출금리끝판왕",
    "pkg": "me.yogurthelp.loan",
-   "target": "5.0.1",
+   "target": "5.2.0",
    "play": "5.0.0",
    "note": "",
    "status": "local_ahead"
@@ -152,9 +152,9 @@
    "name": "휴대폰끝판왕",
    "pkg": "me.yogurthelp.phone",
    "target": "5.2.0",
-   "play": "5.0.0",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "phonemem",
