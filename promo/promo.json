@@ -1,5 +1,5 @@
 {
- "ver": 13,
+ "ver": 14,
  "enabled": true,
  "apps": [
   {
@@ -220,7 +220,7 @@
    "enabled": true,
    "icon": "icons/movie.png",
    "label": "박스오피스끝판왕",
-   "headline": "주말에 뭐 보지? 1위부터 확인"
+   "headline": "주말에 무슨 영화 볼까?"
   },
   {
    "key": "tv",
