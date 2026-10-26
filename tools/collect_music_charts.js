@@ -351,11 +351,16 @@ async function mirrorBillboard(baseDir) {
           };
           src = '폴백';
         } catch (e2) { console.error('빌보드 hot-100 폴백도 실패(기존 유지): ' + e2.message); }
-      } else if (prev && prev.data) {
-        // 데이터는 기존 유지하되 이미지 공백은 아래 iTunes 보충만 수행
-        chart = prev; src = '기존(이미지 보충)';
       } else {
-        console.error('빌보드 ' + c.slug + ': 기존 파일 유지');
+        // bb200 폴백: 주간 CSV 아카이브(공개 저장소, 매주 갱신) — 최근 토요일부터 4주 역탐색
+        try {
+          chart = await bb200FromCsv();
+          src = '폴백(CSV)';
+        } catch (e2) {
+          console.error('빌보드 ' + c.slug + ' 폴백도 실패: ' + e2.message);
+          if (prev && prev.data) { chart = prev; src = '기존(이미지 보충)'; }
+          else console.error('빌보드 ' + c.slug + ': 기존 파일 유지');
+        }
       }
     }
     if (chart) {
@@ -379,6 +384,47 @@ async function mirrorBillboard(baseDir) {
     }
     await sleep(300);
   }
+}
+// bb200 폴백 — cbenoit2/billboard-data(utdata 포크, 매주 스크랩)의 주간 CSV.
+// 차트 발표일은 토요일 날짜 — 최근 토요일부터 4주 거슬러 첫 성공분 사용.
+function csvCells(line) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) { if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out;
+}
+async function bb200FromCsv() {
+  const sat = new Date(); // UTC 기준 최근 토요일
+  sat.setUTCDate(sat.getUTCDate() - ((sat.getUTCDay() + 1) % 7));
+  const p = n => (n < 10 ? '0' : '') + n;
+  let lastErr = null;
+  for (let w = 0; w < 4; w++) {
+    const d = new Date(sat.getTime() - w * 7 * 86400000);
+    const ds = d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate());
+    try {
+      const csv = await req('https://raw.githubusercontent.com/cbenoit2/billboard-data/main/data-scraped/billboard-200/' + d.getUTCFullYear() + '/' + ds + '.csv');
+      const lines = csv.split('\n').map(s => s.replace(/\r$/, '')).filter(Boolean);
+      // chart_week,current_week,title,performer,last_week,peak_pos,wks_on_chart
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const c = csvCells(lines[i]);
+        if (c.length < 7 || !c[2]) continue;
+        const n = v => (v === 'NA' || v === '' || v == null) ? 0 : +v || 0;
+        data.push({ name: c[2], artist: c[3], image: '', rank: +c[1], last_week_rank: n(c[4]), peak_rank: n(c[5]), weeks_on_chart: n(c[6]) });
+      }
+      if (data.length < 150) throw new Error('행 ' + data.length + '건');
+      console.log('빌보드 billboard-200: 주간 CSV ' + ds + ' 사용');
+      return { date: ds, data };
+    } catch (e) { lastErr = e; }
+    await sleep(300);
+  }
+  throw lastErr || new Error('CSV 4주 역탐색 실패');
 }
 // iTunes Search — 곡/앨범 아트워크 1건 조회 (실패 시 빈 문자열)
 async function itunesArt(term, entity) {
