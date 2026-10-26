@@ -215,8 +215,13 @@ async function enrichPosters(items, cache, label) {
   try {
     const kinds = [['tot', ''], ['kor', 'K'], ['foreign', 'F']];
     const all = {};
+    let baseYm = ''; // KOBIS 공식통계의 "최종 기준년월 : 2026/08" — 앱 헤더 기준일 표기용
     for (const [key, nation] of kinds) {
       const html = await get('https://www.kobis.or.kr/kobis/business/stat/offc/findFormerBoxOfficeList.do?loadEnd=0&searchType=search&sMultiMovieYn=&sRepNationCd=' + nation);
+      if (!baseYm) {
+        const m = html.match(/최종\s*기준년월\s*:\s*(\d{4})\s*\/\s*(\d{1,2})/);
+        if (m) baseYm = m[1] + '.' + ('0' + m[2]).slice(-2);
+      }
       const items = parseAlltime(html);
       if (items.length >= 10) { all[key] = items; }
       await new Promise(r => setTimeout(r, 400));
@@ -258,8 +263,8 @@ async function enrichPosters(items, cache, label) {
       const prev = readJson(ALLTIME, null);
       const cache = posterCacheFrom(prev, readJson(YEARLY, null));
       for (const k of ['tot', 'kor', 'foreign']) { await enrichPosters(all[k], cache, '역대(' + k + ')'); }
-      const next = { generated: genStamp(), tot: all.tot, kor: all.kor, foreign: all.foreign };
-      if (!prev || JSON.stringify([prev.tot, prev.kor, prev.foreign]) !== JSON.stringify([all.tot, all.kor, all.foreign])) {
+      const next = { generated: genStamp(), baseYm: baseYm, tot: all.tot, kor: all.kor, foreign: all.foreign };
+      if (!prev || prev.baseYm !== baseYm || JSON.stringify([prev.tot, prev.kor, prev.foreign]) !== JSON.stringify([all.tot, all.kor, all.foreign])) {
         fs.writeFileSync(ALLTIME, JSON.stringify(next));
         changed = true;
         console.log('역대 저장: ' + ALLTIME + ' (종합 1위 ' + all.tot[0].title + ' / 한국 ' + all.kor[0].title + ' / 외국 ' + all.foreign[0].title + ')');
