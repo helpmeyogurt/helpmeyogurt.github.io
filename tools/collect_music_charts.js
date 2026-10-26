@@ -271,12 +271,15 @@ async function collectNewest() {
 // 원본 미러(KoreanThinker/billboard-json)는 2026-08-19 GitHub 차단으로 소멸 —
 // 우리 파일이 2026-08-18 스냅샷에 멈춰 있었음(상위권 이미지 공백도 그 스냅샷의 결함).
 // → billboard.com 차트 페이지(서버렌더)를 직접 파싱, 기존과 같은 JSON 형식으로 저장(앱 무변경).
-//   일부 지역/봇판정 시 행 없는 셸 HTML이 올 수 있음 → 행수 미달이면 기존 파일 유지,
-//   HOT100은 mhollingshead/billboard-hot-100 JSON 폴백(이미지는 기존 파일에서 승계).
+//   ⚠ 브라우저(Chrome) UA를 보내면 행 없는 셸 HTML이 옴(봇 판정) — 비브라우저 도구 UA로
+//   자기 식별하면 서버렌더 행을 줌(살아있는 미러 mhollingshead도 axios 기본 UA로 성공 중).
+//   행수 미달이면 기존 파일 유지, HOT100은 mhollingshead JSON 폴백(이미지는 기존 파일에서 승계),
+//   남은 이미지 공백은 iTunes Search API(공개·무키)로 보충.
 const BB_CHARTS = [
-  { slug: 'hot-100', file: 'billboard/hot100.json', min: 90 },
-  { slug: 'billboard-200', file: 'billboard/bb200.json', min: 150 },
+  { slug: 'hot-100', file: 'billboard/hot100.json', min: 90, entity: 'song' },
+  { slug: 'billboard-200', file: 'billboard/bb200.json', min: 150, entity: 'album' },
 ];
+const BB_UA = { 'User-Agent': 'yogurt-chart-mirror/1.0', 'Accept': 'text/html,*/*', 'Accept-Language': 'en-US,en' };
 function bbDecode(s) {
   return String(s || '')
     .replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n))
@@ -325,41 +328,67 @@ async function mirrorBillboard(baseDir) {
   for (const c of BB_CHARTS) {
     const dest = path.join(baseDir, c.file);
     const prev = readJson(dest);
+    let chart = null, src = '직파싱';
     try {
-      const html = await req('https://www.billboard.com/charts/' + c.slug + '/');
-      const chart = bbParseChart(html);
-      if (chart.data.length < c.min) throw new Error('행 ' + chart.data.length + '건(<' + c.min + ') — 셸 응답/개편 가능성');
-      if (!chart.date) chart.date = (prev && prev.date) || '';
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.writeFileSync(dest, JSON.stringify(chart));
-      const noImg = chart.data.filter(d => !d.image).length;
-      console.log('빌보드 ' + c.slug + ': ' + chart.data.length + '건 (' + chart.date + (noImg ? ', 이미지 공백 ' + noImg + '건' : '') + ')');
+      const html = await req('https://www.billboard.com/charts/' + c.slug + '/', { headers: BB_UA });
+      const parsed = bbParseChart(html);
+      if (parsed.data.length < c.min) throw new Error('행 ' + parsed.data.length + '건(<' + c.min + ') — 셸 응답/개편 가능성');
+      if (!parsed.date) parsed.date = (prev && prev.date) || '';
+      chart = parsed;
     } catch (e) {
       console.error('빌보드 ' + c.slug + ' 수집 실패: ' + e.message);
       if (c.slug === 'hot-100') {
-        // 폴백: mhollingshead JSON(이미지 없음) — 이미지는 기존 파일에서 곡+가수 키로 승계
+        // 폴백: mhollingshead JSON(이미지 없음 — 아래 승계+iTunes 보충이 채움)
         try {
           const j = JSON.parse(await req('https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/recent.json'));
           if (!j || !j.data || j.data.length < 90) throw new Error('폴백 데이터 부족');
-          const imgByKey = {};
-          if (prev && prev.data) for (const d of prev.data) imgByKey[d.name + '|' + d.artist] = d.image || '';
-          const chart = {
+          chart = {
             date: j.date,
             data: j.data.map(s => ({
-              name: s.song, artist: s.artist, image: imgByKey[s.song + '|' + s.artist] || '',
+              name: s.song, artist: s.artist, image: '',
               rank: s.this_week, last_week_rank: s.last_week || 0, peak_rank: s.peak_position || 0, weeks_on_chart: s.weeks_on_chart || 0,
             })),
           };
-          fs.mkdirSync(path.dirname(dest), { recursive: true });
-          fs.writeFileSync(dest, JSON.stringify(chart));
-          console.log('빌보드 hot-100: mhollingshead 폴백 ' + chart.data.length + '건 (' + chart.date + ')');
+          src = '폴백';
         } catch (e2) { console.error('빌보드 hot-100 폴백도 실패(기존 유지): ' + e2.message); }
+      } else if (prev && prev.data) {
+        // 데이터는 기존 유지하되 이미지 공백은 아래 iTunes 보충만 수행
+        chart = prev; src = '기존(이미지 보충)';
       } else {
         console.error('빌보드 ' + c.slug + ': 기존 파일 유지');
       }
     }
+    if (chart) {
+      // ① 기존 파일에서 곡+가수 키로 이미지 승계 (이미지는 불변 — 재조회 방지)
+      const imgByKey = {};
+      if (prev && prev.data) for (const d of prev.data) if (d.image) imgByKey[d.name + '|' + d.artist] = d.image;
+      for (const d of chart.data) if (!d.image && imgByKey[d.name + '|' + d.artist]) d.image = imgByKey[d.name + '|' + d.artist];
+      // ② 남은 공백은 iTunes Search API로 보충 (공개·무키, 분당 ~20건 제한 → 3초 간격, 런당 60건 캡)
+      let filled = 0, misses = 0;
+      for (const d of chart.data) {
+        if (d.image || filled >= 60) continue;
+        d.image = await itunesArt(d.artist + ' ' + d.name, c.entity);
+        if (d.image) filled++; else misses++;
+        await sleep(3000);
+      }
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, JSON.stringify(chart));
+      const noImg = chart.data.filter(d => !d.image).length;
+      console.log('빌보드 ' + c.slug + ' 저장(' + src + '): ' + chart.data.length + '건 (' + chart.date +
+        (filled ? ', iTunes 보충 ' + filled + '건' : '') + (noImg ? ', 이미지 공백 ' + noImg + '건' : '') + ')');
+    }
     await sleep(300);
   }
+}
+// iTunes Search — 곡/앨범 아트워크 1건 조회 (실패 시 빈 문자열)
+async function itunesArt(term, entity) {
+  try {
+    const u = 'https://itunes.apple.com/search?media=music&country=us&limit=1&entity=' + entity + '&term=' + encodeURIComponent(term);
+    const j = JSON.parse(await req(u, { headers: BB_UA }));
+    const it = j && j.results && j.results[0];
+    if (it && it.artworkUrl100) return it.artworkUrl100.replace('100x100', '300x300');
+  } catch (e) { /* 보충 실패는 무시 */ }
+  return '';
 }
 
 // ---------------------------------------------------------------- 공유 (collect_music_now.js가 require)
