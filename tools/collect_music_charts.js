@@ -267,29 +267,103 @@ async function collectNewest() {
   return out;
 }
 
-// ---------------------------------------------------------------- 해외차트 미러 (서드파티 raw 중단 대비 보험)
-// 앱은 우리 미러 우선 → 원본 raw 폴백. 파일은 원본 그대로 저장.
-const BB_MIRROR = [
-  { src: 'https://raw.githubusercontent.com/KoreanThinker/billboard-json/main/billboard-hot-100/recent.json', file: 'billboard/hot100.json' },
-  { src: 'https://raw.githubusercontent.com/KoreanThinker/billboard-json/main/billboard-200/recent.json', file: 'billboard/bb200.json' },
+// ---------------------------------------------------------------- 빌보드 직접 수집 (HOT100/BB200)
+// 원본 미러(KoreanThinker/billboard-json)는 2026-08-19 GitHub 차단으로 소멸 —
+// 우리 파일이 2026-08-18 스냅샷에 멈춰 있었음(상위권 이미지 공백도 그 스냅샷의 결함).
+// → billboard.com 차트 페이지(서버렌더)를 직접 파싱, 기존과 같은 JSON 형식으로 저장(앱 무변경).
+//   일부 지역/봇판정 시 행 없는 셸 HTML이 올 수 있음 → 행수 미달이면 기존 파일 유지,
+//   HOT100은 mhollingshead/billboard-hot-100 JSON 폴백(이미지는 기존 파일에서 승계).
+const BB_CHARTS = [
+  { slug: 'hot-100', file: 'billboard/hot100.json', min: 90 },
+  { slug: 'billboard-200', file: 'billboard/bb200.json', min: 150 },
 ];
-async function mirrorBillboard(baseDir) {
-  for (const m of BB_MIRROR) {
+function bbDecode(s) {
+  return String(s || '')
+    .replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n))
+    .replace(/&#x([0-9a-f]+);/gi, (m, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
+}
+function bbParseChart(html) {
+  // 발표일: "Week of October 25, 2026"
+  let date = '';
+  const dm = html.match(/Week of\s+([A-Za-z]+\.?\s+\d{1,2},\s+\d{4})/);
+  if (dm) {
+    const d = new Date(dm[1].replace('.', ''));
+    if (!isNaN(d)) { const p = n => (n < 10 ? '0' : '') + n; date = d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()); }
+  }
+  const rows = html.split('o-chart-results-list-row-container');
+  const data = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
     try {
-      const body = await req(m.src);
-      const j = JSON.parse(body);
-      if (!j || !j.data || !j.data.length) throw new Error('빈 데이터');
-      const dest = path.join(baseDir, m.file);
+      const t = r.split('id="title-of-a-story"')[1];
+      const name = bbDecode(t.slice(t.indexOf('>') + 1).split('<')[0]);
+      if (!name) continue;
+      const after = t.slice(t.indexOf('</h3>'));
+      const am = after.match(/<span class="c-label[^"]*"[^>]*>([^<]+)</);
+      const artist = bbDecode(am ? am[1] : '');
+      // 앨범아트: 행 내 첫 이미지 (lazy-src 우선 — 상위권 즉시로딩은 src에 직접)
+      let image = '';
+      const im = r.match(/data-lazy-src="(https:[^"]+)"/) || r.match(/<img[^>]+src="(https:\/\/charts-static\.billboard\.com[^"]+)"/);
+      if (im) image = im[1];
+      // 숫자 토큰 등장 순서 = [순위, LW, Peak, Weeks, (상세패널 반복...)] — 앞 4개만
+      const nums = [];
+      const re = /<span class="c-label[^"]*"[^>]*>\s*([0-9]{1,3}|-)\s*</g;
+      let m2; while ((m2 = re.exec(r)) && nums.length < 4) nums.push(m2[1]);
+      const n = v => (v === '-' || v == null) ? 0 : +v;
+      data.push({
+        name, artist, image,
+        rank: data.length + 1,
+        last_week_rank: n(nums[1]), peak_rank: n(nums[2]), weeks_on_chart: n(nums[3]),
+      });
+    } catch (e) { /* 행 구조가 다르면 스킵 */ }
+  }
+  return { date, data };
+}
+async function mirrorBillboard(baseDir) {
+  for (const c of BB_CHARTS) {
+    const dest = path.join(baseDir, c.file);
+    const prev = readJson(dest);
+    try {
+      const html = await req('https://www.billboard.com/charts/' + c.slug + '/');
+      const chart = bbParseChart(html);
+      if (chart.data.length < c.min) throw new Error('행 ' + chart.data.length + '건(<' + c.min + ') — 셸 응답/개편 가능성');
+      if (!chart.date) chart.date = (prev && prev.date) || '';
       fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.writeFileSync(dest, body);
-      console.log('미러: ' + m.file + ' (' + j.data.length + '건, ' + (j.date || '') + ')');
-    } catch (e) { console.error('미러 실패(기존 유지): ' + m.file + ' — ' + e.message); }
+      fs.writeFileSync(dest, JSON.stringify(chart));
+      const noImg = chart.data.filter(d => !d.image).length;
+      console.log('빌보드 ' + c.slug + ': ' + chart.data.length + '건 (' + chart.date + (noImg ? ', 이미지 공백 ' + noImg + '건' : '') + ')');
+    } catch (e) {
+      console.error('빌보드 ' + c.slug + ' 수집 실패: ' + e.message);
+      if (c.slug === 'hot-100') {
+        // 폴백: mhollingshead JSON(이미지 없음) — 이미지는 기존 파일에서 곡+가수 키로 승계
+        try {
+          const j = JSON.parse(await req('https://raw.githubusercontent.com/mhollingshead/billboard-hot-100/main/recent.json'));
+          if (!j || !j.data || j.data.length < 90) throw new Error('폴백 데이터 부족');
+          const imgByKey = {};
+          if (prev && prev.data) for (const d of prev.data) imgByKey[d.name + '|' + d.artist] = d.image || '';
+          const chart = {
+            date: j.date,
+            data: j.data.map(s => ({
+              name: s.song, artist: s.artist, image: imgByKey[s.song + '|' + s.artist] || '',
+              rank: s.this_week, last_week_rank: s.last_week || 0, peak_rank: s.peak_position || 0, weeks_on_chart: s.weeks_on_chart || 0,
+            })),
+          };
+          fs.mkdirSync(path.dirname(dest), { recursive: true });
+          fs.writeFileSync(dest, JSON.stringify(chart));
+          console.log('빌보드 hot-100: mhollingshead 폴백 ' + chart.data.length + '건 (' + chart.date + ')');
+        } catch (e2) { console.error('빌보드 hot-100 폴백도 실패(기존 유지): ' + e2.message); }
+      } else {
+        console.error('빌보드 ' + c.slug + ': 기존 파일 유지');
+      }
+    }
     await sleep(300);
   }
 }
 
 // ---------------------------------------------------------------- 공유 (collect_music_now.js가 require)
-module.exports = { req, sleep, kstNow, dateKey, genStamp, melonItems, melonDate, melonLikes, genieItems, bugsItems };
+module.exports = { req, sleep, kstNow, dateKey, genStamp, melonItems, melonDate, melonLikes, genieItems, bugsItems, bbParseChart, mirrorBillboard };
 
 // ----------------------------------------------------------------
 if (require.main === module) (async () => {
