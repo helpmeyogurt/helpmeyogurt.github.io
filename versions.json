@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26 09:10 KST",
+ "generated": "2026-10-26 15:02 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -17,9 +17,9 @@
    "name": "뉴스끝판왕",
    "pkg": "me.yogurthelp.news",
    "target": "5.2.0",
-   "play": "5.0.7",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "tel",
@@ -170,9 +170,9 @@
    "name": "자동차순위끝판왕",
    "pkg": "me.yogurthelp.car",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "movie",
