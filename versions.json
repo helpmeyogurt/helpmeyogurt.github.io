@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-27 04:11 KST",
+ "generated": "2026-10-27 08:47 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -178,7 +178,7 @@
    "key": "movie",
    "name": "박스오피스끝판왕",
    "pkg": "me.yogurthelp.movie",
-   "target": "5.0.7",
+   "target": "5.2.0",
    "play": "5.0.6",
    "note": "",
    "status": "local_ahead"
@@ -196,7 +196,7 @@
    "key": "music",
    "name": "음원차트끝판왕",
    "pkg": "me.yogurthelp.music",
-   "target": "5.0.6",
+   "target": "5.2.0",
    "play": "5.0.5",
    "note": "",
    "status": "local_ahead"
@@ -214,7 +214,7 @@
    "key": "perform",
    "name": "공연순위끝판왕",
    "pkg": "me.yogurthelp.perform",
-   "target": "5.0.6",
+   "target": "5.2.0",
    "play": "5.0.5",
    "note": "",
    "status": "local_ahead"
