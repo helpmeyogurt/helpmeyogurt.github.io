@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-26 21:49 KST",
+ "generated": "2026-10-27 04:11 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -188,9 +188,9 @@
    "name": "시청률끝판왕",
    "pkg": "me.yogurthelp.tv",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "music",
@@ -206,9 +206,9 @@
    "name": "베스트셀러끝판왕",
    "pkg": "me.yogurthelp.book",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "perform",
