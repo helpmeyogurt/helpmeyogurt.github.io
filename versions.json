@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-27 19:25 KST",
+ "generated": "2026-10-28 01:28 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -89,27 +89,27 @@
    "name": "실거래가끝판왕",
    "pkg": "me.yogurthelp.realtytrade",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "realtyprice",
    "name": "공시가격끝판왕",
    "pkg": "me.yogurthelp.realtyprice",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "realtycal",
    "name": "부동산계산기끝판왕",
    "pkg": "me.yogurthelp.realtycal",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "realtydata",
@@ -134,18 +134,18 @@
    "name": "월급계산기끝판왕",
    "pkg": "me.yogurthelp.salary",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "tax",
    "name": "세금정보끝판왕",
    "pkg": "me.yogurthelp.tax",
    "target": "5.2.0",
-   "play": "5.0.2",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "phone",
