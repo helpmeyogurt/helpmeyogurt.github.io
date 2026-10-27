@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-27 08:47 KST",
+ "generated": "2026-10-27 13:53 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -179,9 +179,9 @@
    "name": "박스오피스끝판왕",
    "pkg": "me.yogurthelp.movie",
    "target": "5.2.0",
-   "play": "5.0.6",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "tv",
@@ -197,9 +197,9 @@
    "name": "음원차트끝판왕",
    "pkg": "me.yogurthelp.music",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "book",
@@ -215,18 +215,18 @@
    "name": "공연순위끝판왕",
    "pkg": "me.yogurthelp.perform",
    "target": "5.2.0",
-   "play": "5.0.5",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "tool",
    "name": "도구모음끝판왕",
    "pkg": "me.yogurthelp.tool",
    "target": "5.2.0",
-   "play": "5.0.2",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "election",
