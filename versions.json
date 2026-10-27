@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-27 13:53 KST",
+ "generated": "2026-10-27 19:25 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -88,7 +88,7 @@
    "key": "realtytrade",
    "name": "실거래가끝판왕",
    "pkg": "me.yogurthelp.realtytrade",
-   "target": "5.0.6",
+   "target": "5.2.0",
    "play": "5.0.5",
    "note": "",
    "status": "local_ahead"
@@ -97,7 +97,7 @@
    "key": "realtyprice",
    "name": "공시가격끝판왕",
    "pkg": "me.yogurthelp.realtyprice",
-   "target": "5.0.6",
+   "target": "5.2.0",
    "play": "5.0.5",
    "note": "",
    "status": "local_ahead"
@@ -106,7 +106,7 @@
    "key": "realtycal",
    "name": "부동산계산기끝판왕",
    "pkg": "me.yogurthelp.realtycal",
-   "target": "5.0.6",
+   "target": "5.2.0",
    "play": "5.0.5",
    "note": "",
    "status": "local_ahead"
@@ -124,7 +124,7 @@
    "key": "law",
    "name": "법률정보끝판왕",
    "pkg": "me.yogurthelp.law",
-   "target": "5.0.7",
+   "target": "5.2.0",
    "play": "5.0.6",
    "note": "",
    "status": "local_ahead"
@@ -133,7 +133,7 @@
    "key": "salary",
    "name": "월급계산기끝판왕",
    "pkg": "me.yogurthelp.salary",
-   "target": "5.0.6",
+   "target": "5.2.0",
    "play": "5.0.5",
    "note": "",
    "status": "local_ahead"
@@ -142,7 +142,7 @@
    "key": "tax",
    "name": "세금정보끝판왕",
    "pkg": "me.yogurthelp.tax",
-   "target": "5.0.3",
+   "target": "5.2.0",
    "play": "5.0.2",
    "note": "",
    "status": "local_ahead"
