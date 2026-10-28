@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-28 06:14 KST",
+ "generated": "2026-10-28 10:13 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -187,10 +187,10 @@
    "key": "tv",
    "name": "시청률끝판왕",
    "pkg": "me.yogurthelp.tv",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "music",
