@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-29 00:56 KST",
+ "generated": "2026-10-29 05:59 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -116,9 +116,9 @@
    "name": "부동산정보끝판왕",
    "pkg": "me.yogurthelp.realtydata",
    "target": "5.2.0",
-   "play": "5.0.7",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "law",
