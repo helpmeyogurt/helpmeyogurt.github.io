@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-29 09:49 KST",
+ "generated": "2026-10-29 15:58 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -233,9 +233,9 @@
    "name": "선거끝판왕",
    "pkg": "me.yogurthelp.election",
    "target": "5.2.0",
-   "play": "3.8.3",
+   "play": "5.2.0",
    "note": "",
-   "status": "local_ahead"
+   "status": "same"
   },
   {
    "key": "tour",
