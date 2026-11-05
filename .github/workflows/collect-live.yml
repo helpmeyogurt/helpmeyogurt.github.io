@@ -1,0 +1,42 @@
+# 상주 수집 루프 — 고빈도 수집기를 10분 틱으로 직접 돌리고, 일 단위 수집기는 제시각에 dispatch로 깨움.
+# GitHub 예약 실행(schedule)은 부하로 대부분 누락(날씨 10분 cron이 하루 4~5회만 실행)돼서
+# schedule 대신 실행 중인 job 안에서 시간을 재는 방식. 자세한 동작은 tools/live_loop.js 머리말.
+#  · 한 번에 약 5시간 20분 실행 → 첫 틱 후 후속 실행을 큐에 올려 둠(concurrency 대기) → 끝나면 바로 이어 실행.
+#  · 아래 schedule은 감시용: 사슬이 끊겼을 때만 의미가 있음(돌고 있으면 concurrency 대기열로 합쳐짐).
+#  · 각 collect-*.yml의 schedule은 폴백으로 남아 있고 live-gate.yml이 이 루프가 건강하면 건너뜀.
+#  · 멈추려면 Actions에서 이 워크플로를 Disable → 폴백 schedule이 예전처럼 동작.
+name: collect-live
+
+on:
+  schedule:
+    - cron: '8,38 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: collect-live
+  cancel-in-progress: false
+
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Live loop
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DATAGO_KEY: ${{ secrets.DATAGO_TOOL_KEY }}
+          FRED_KEY: ${{ secrets.FRED_KEY }}
+        run: node tools/live_loop.js

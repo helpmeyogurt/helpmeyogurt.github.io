@@ -13,13 +13,19 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: collect-weather-weekly
   cancel-in-progress: false
 
 jobs:
+  gate:
+    uses: ./.github/workflows/live-gate.yml
+
   collect:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.run != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,9 +57,9 @@ jobs:
             "$SUBJ"*)
               git reset --soft HEAD~2
               git commit -m "$SUBJ $(TZ=Asia/Seoul date +%m-%d\ %H:%M)"
-              git push --force-with-lease origin main || { git fetch origin && git rebase origin/main && git push origin main; }
+              git push --force-with-lease origin main || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }
               ;;
             *)
-              git push origin main || { git fetch origin && git rebase origin/main && git push origin main; }
+              git push origin main || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }
               ;;
           esac

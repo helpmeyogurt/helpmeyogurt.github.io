@@ -14,13 +14,19 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: collect-vod
   cancel-in-progress: false
 
 jobs:
+  gate:
+    uses: ./.github/workflows/live-gate.yml
+
   collect:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.run != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,4 +55,4 @@ jobs:
           git add vod/vod_top100.json vod/vod_top100_history.json
           git diff --cached --quiet && echo 'no change' && exit 0
           git commit -m "vod: TOP 100 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d\ %H:%M)"
-          git push || { git pull --rebase origin main && git push; }
+          git push || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }

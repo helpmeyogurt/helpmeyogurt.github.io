@@ -12,13 +12,19 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: collect-tv
   cancel-in-progress: true
 
 jobs:
+  gate:
+    uses: ./.github/workflows/live-gate.yml
+
   collect:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.run != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -55,4 +61,4 @@ jobs:
           git diff --cached --quiet && echo 'no change' && exit 0
           git commit -m "tv: 순위 갱신 $(TZ=Asia/Seoul date +%m-%d)"
           git push origin main \
-            || { git fetch origin && git rebase origin/main && git push origin main; }
+            || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }

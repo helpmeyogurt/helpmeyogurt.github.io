@@ -14,13 +14,19 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: collect-movie-daily
   cancel-in-progress: false
 
 jobs:
+  gate:
+    uses: ./.github/workflows/live-gate.yml
+
   collect:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.run != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,4 +60,4 @@ jobs:
           git add movie/daily_boxoffice.json movie/daily_history.json movie/yearly_boxoffice.json movie/alltime_boxoffice.json movie/mojo_world.json movie/mojo_usa.json movie/critic.json
           git diff --cached --quiet && echo 'no change' && exit 0
           git commit -m "movie: 일간/연간 박스오피스 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d\ %H:%M)"
-          git push || { git pull --rebase origin main && git push; }
+          git push || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }

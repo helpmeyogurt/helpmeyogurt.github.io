@@ -1,0 +1,41 @@
+# 수집기 공용 관문(workflow_call). 예약 실행(schedule)일 때만 판단:
+#  · collect-live 루프가 실행 중이고 최근 45분 안에 live 커밋이 있으면 → 건너뜀(루프가 이미 수집/dispatch 중)
+#  · 아니면 → 수집기를 그대로 실행(폴백) + 루프가 없으면 다시 깨우고, 60분 넘게 멈춘 루프는 취소해 후속 실행이 이어받게 함
+#  · 수동/루프 dispatch 실행은 항상 진행. 판단 중 API 오류는 실행 쪽으로(fail-open).
+name: live-gate
+
+on:
+  workflow_call:
+    outputs:
+      run:
+        value: ${{ jobs.check.outputs.run }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.g.outputs.run }}
+    steps:
+      - id: g
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set +e
+          if [ "$EVENT" != "schedule" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          NOW=$(date +%s)
+          RUN=$(gh run list -w collect-live.yml -s in_progress -L 1 --json databaseId,startedAt --jq '.[0] // empty | "\(.databaseId) \(.startedAt)"')
+          LIVE=${RUN%% *}; RUN_AGE=999999
+          [ -n "$RUN" ] && RUN_AGE=$(( NOW - $(date -d "${RUN#* }" +%s) ))
+          LAST=$(gh api "repos/$GH_REPO/commits?per_page=30" --jq '[.[]|select(.commit.message|startswith("live:"))][0].commit.committer.date // ""')
+          AGE=999999
+          [ -n "$LAST" ] && AGE=$(( NOW - $(date -d "$LAST" +%s) ))
+          echo "live run=${LIVE:-none} run age=${RUN_AGE}s, last live commit age=${AGE}s"
+          if [ -n "$LIVE" ] && { [ "$AGE" -lt 2700 ] || [ "$RUN_AGE" -lt 1200 ]; }; then
+            echo "루프 정상 → 건너뜀"; echo "run=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "루프 비정상 → 폴백 실행"; echo "run=true" >> "$GITHUB_OUTPUT"
+          if [ -n "$LIVE" ] && [ "$AGE" -ge 3600 ] && [ "$RUN_AGE" -ge 3600 ]; then gh run cancel "$LIVE" && echo "멈춘 루프 취소"; LIVE=""; fi
+          [ -z "$LIVE" ] && gh workflow run collect-live.yml --ref main && echo "루프 재기동"
+          exit 0
