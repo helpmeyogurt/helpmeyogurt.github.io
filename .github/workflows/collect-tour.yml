@@ -1,0 +1,54 @@
+# 여행끝판왕 '이달의 축제' → tour/festival.json (관광공사 TourAPI 전국 + 제주 VisitJeju 보충 시드 병합).
+# 하루 1회 + 캐치업. 관광공사가 기존 축제의 날짜를 행사 직전에 갱신하므로 매일 다시 받음.
+# 제주 보충 시드(tour/jeju_vj.json)는 VisitJeju가 세션 토큰+브라우저 필요라 로컬에서 갱신해 올림.
+name: collect-tour
+
+on:
+  schedule:
+    - cron: '20 20 * * *'   # KST 05:20
+    - cron: '20 3 * * *'    # KST 12:20 (캐치업)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: collect-tour
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    uses: ./.github/workflows/live-gate.yml
+
+  collect:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.run != 'false' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Collect festivals
+        env:
+          DATAGO_KEY: ${{ secrets.DATAGO_TOOL_KEY }}
+        run: |
+          for i in 1 2 3; do
+            node tools/collect_tour_festival.js && exit 0
+            echo "attempt $i failed; retry in 60s"; sleep 60
+          done
+          exit 1
+
+      - name: Commit & push
+        run: |
+          git config user.name 'yogurt'
+          git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
+          git add tour/festival.json
+          git diff --cached --quiet && echo 'no change' && exit 0
+          git commit -m "tour: 축제 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d\ %H:%M)"
+          git push origin main || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }
