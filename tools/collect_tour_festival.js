@@ -1,17 +1,27 @@
-// 여행끝판왕 '이달의 축제' 수집 — 한국관광공사 TourAPI(KorService2/searchFestival2) 전국 진행중+다가오는 축제
-// + 제주는 VisitJeju 보충분(tour/jeju_vj.json, 로컬 브라우저 수집 후 업로드) 병합 → tour/festival.json
+// 여행끝판왕 '이달의 축제' 수집 → tour/festival.json
+//  · 기본: 한국관광공사 TourAPI(KorService2/searchFestival2) 전국 진행중+다가오는 축제
+//  · 보충(관광공사에 없는 것만, 같은 지역 안 이름 일치/포함이면 중복 처리): 이미지 있는 소스부터
+//      gb 경북 tour.gb.go.kr 목록 JSON / dj 대전 daejeontour.co.kr 페이지 내장 calEvents
+//      gw 강원 gangwon.to 목록 HTML / jb 전북 tour.jb.go.kr 목록 HTML(세션 쿠키)
+//      vj 제주 VisitJeju 시드(tour/jeju_vj.json — 세션 토큰이 필요해 로컬 브라우저로 수집해 올림)
+//      std 전국문화축제표준데이터(data.go.kr, 시군구 직접 등록, 이미지 없음)
+//  · 소스별 격리: 보충 소스가 실패하면 이전 festival.json의 그 소스 항목(미종료분)을 이어 씀.
 // GitHub Actions에서 실행(env DATAGO_KEY = data.go.kr 일반 인증키 decoding). 키는 출력에 절대 쓰지 않음.
-// 지역(ar)은 앱 탭의 areaCode 체계. lDongRegnCd(법정동 시도코드) → areaCode 매핑, 전남광주통합(12)은 자치구로 광주/전남 분리.
-// 안전장치: API 오류·결과 급감(이전 대비 50% 미만 또는 50건 미만)이면 실패 종료 → 기존 파일 유지.
+// 지역(ar)은 앱 탭의 areaCode 체계. 관광공사는 lDongRegnCd, 나머지는 주소 시도명으로 매핑.
+// 전남광주통합특별시는 자치구(동·서·남·북·광산구)면 광주, 아니면 전남.
+// 안전장치: 관광공사 API 오류·결과 급감(이전 대비 50% 미만 또는 50건 미만)이면 실패 종료 → 기존 파일 유지.
 // 사용: node tools/collect_tour_festival.js [--js <data_tour_festival.js 경로>]   (--js: 앱 번들용 var festData 파일도 생성)
 'use strict';
 const fs = require('fs');
 const https = require('https');
+const http = require('http');
+const tls = require('tls');
 
 const KEY = process.env.DATAGO_KEY;
 const OUT = 'tour/festival.json';
 const JEJU = 'tour/jeju_vj.json';
 const BASE = 'https://apis.data.go.kr/B551011/KorService2/searchFestival2';
+const STD = 'https://api.data.go.kr/openapi/tn_pubr_public_cltur_fstvl_api';
 const ROWS = 500;
 
 if (!KEY) { console.error('DATAGO_KEY 미설정'); process.exit(1); }
@@ -20,6 +30,9 @@ const GJ = ['동구', '서구', '남구', '북구', '광산구'];
 const CODE = { '11': 1, '28': 2, '30': 3, '27': 4, '29': 5, '26': 6, '31': 7,
   '41': 31, '42': 32, '51': 32, '43': 33, '44': 34, '47': 35,
   '48': 36, '45': 37, '52': 37, '46': 38, '50': 39 };
+const SIDO = [[/^서울/, 1], [/^인천/, 2], [/^대전/, 3], [/^대구/, 4], [/^광주/, 5], [/^부산/, 6], [/^울산/, 7], [/^세종/, 8],
+  [/^경기/, 31], [/^강원/, 32], [/^충청북도|^충북/, 33], [/^충청남도|^충남/, 34], [/^경상북도|^경북/, 35], [/^경상남도|^경남/, 36],
+  [/^전라북도|^전북/, 37], [/^전라남도|^전남(?!광주)/, 38], [/^제주/, 39]];
 
 function areaOf(f) {
   const c = String(f.lDongRegnCd || '');
@@ -27,21 +40,50 @@ function areaOf(f) {
   if (c.startsWith('36')) return 8;
   return CODE[c] || 0;
 }
+function areaOfAddr(a) {
+  const p = String(a || '').trim().split(/\s+/);
+  if (/^전남광주/.test(p[0] || '')) return GJ.includes(p[1] || '') ? 5 : 38;
+  for (const [re, ar] of SIDO) if (re.test(p[0] || '')) return ar;
+  return 0;
+}
 const fmt = d => (d = String(d || ''), d.length === 8 ? d.slice(0, 4) + '.' + d.slice(4, 6) + '.' + d.slice(6, 8) : d);
+const dash = d => String(d || '').trim().replace(/-/g, '.').slice(0, 10);   // 2026-11-06 → 2026.11.06
 const norm = s => String(s || '').replace(/\d+/g, '').replace(/[^가-힣a-zA-Z]/g, '').toLowerCase();
+const unent = s => String(s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'")
+  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function kstToday() {
   const t = new Date(Date.now() + 9 * 3600e3);
   return t.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
-function get(url) {
+// GET/POST (리다이렉트 3회까지, 쿠키 jar 선택)
+function req(url, opt = {}, hop = 0) {
   return new Promise((resolve, reject) => {
-    https.get(url, { timeout: 60000, headers: { 'Accept': 'application/json' } }, res => {
+    const u = new URL(url);
+    const headers = Object.assign({ 'Accept': opt.accept || '*/*' }, opt.headers || {});
+    if (opt.jar && opt.jar.length) headers.Cookie = opt.jar.join('; ');
+    if (opt.body) { headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'; headers['Content-Length'] = Buffer.byteLength(opt.body); }
+    const ro = { method: opt.body ? 'POST' : 'GET', headers, timeout: 60000 };
+    if (opt.ca) ro.ca = opt.ca;
+    const r = https.request(u, ro, res => {
+      if (opt.jar) for (const c of res.headers['set-cookie'] || []) opt.jar.push(c.split(';')[0]);
+      if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hop < 3) {
+        res.resume(); return resolve(req(new URL(res.headers.location, u).href, Object.assign({}, opt, { body: null }), hop + 1));
+      }
       const ch = []; res.on('data', c => ch.push(c));
       res.on('end', () => resolve({ status: res.statusCode, body: Buffer.concat(ch).toString('utf8') }));
-    }).on('error', reject).on('timeout', function () { this.destroy(new Error('timeout')); });
+    });
+    r.on('error', reject).on('timeout', function () { this.destroy(new Error('timeout')); });
+    if (opt.body) r.write(opt.body);
+    r.end();
   });
+}
+async function ok(url, opt) {
+  const r = await req(url, opt);
+  if (r.status !== 200) throw new Error('HTTP ' + r.status);
+  return r.body;
 }
 
 async function fetchAll(today) {
@@ -49,10 +91,9 @@ async function fetchAll(today) {
   for (let page = 1; page <= 20; page++) {
     const q = new URLSearchParams({ serviceKey: KEY, MobileOS: 'ETC', MobileApp: 'yogurt', _type: 'json',
       arrange: 'A', numOfRows: String(ROWS), pageNo: String(page), eventStartDate: today });
-    const r = await get(BASE + '?' + q);
-    if (r.status !== 200) throw new Error('HTTP ' + r.status);
+    const body = await ok(BASE + '?' + q, { accept: 'application/json' });
     let d;
-    try { d = JSON.parse(r.body); } catch (e) { throw new Error('JSON 아님: ' + r.body.slice(0, 80).replace(/\s+/g, ' ')); }
+    try { d = JSON.parse(body); } catch (e) { throw new Error('JSON 아님: ' + body.slice(0, 80).replace(/\s+/g, ' ')); }
     const h = d.response && d.response.header;
     if (!h || h.resultCode !== '0000') throw new Error('resultCode ' + (h && h.resultCode) + ' ' + (h && h.resultMsg));
     const b = d.response.body, it = b.items && b.items.item;
@@ -63,8 +104,119 @@ async function fetchAll(today) {
   throw new Error('페이지 과다');
 }
 
+// 서버가 중간 인증서를 빠뜨린 사이트용: AIA(CA Issuers) 주소의 중간 인증서(DER)를 받아 신뢰 루트에 더함.
+// 검증은 그대로 — 루트까지 체인이 이어지는지 Node가 확인한다.
+function aiaCa(url) {
+  return new Promise((resolve, reject) => {
+    http.get(url, { timeout: 30000 }, res => {
+      const ch = []; res.on('data', c => ch.push(c));
+      res.on('end', () => {
+        if (res.statusCode !== 200) return reject(new Error('AIA HTTP ' + res.statusCode));
+        const b64 = Buffer.concat(ch).toString('base64').match(/.{1,64}/g).join('\n');
+        resolve([...tls.rootCertificates, '-----BEGIN CERTIFICATE-----\n' + b64 + '\n-----END CERTIFICATE-----\n']);
+      });
+    }).on('error', reject).on('timeout', function () { this.destroy(new Error('timeout')); });
+  });
+}
+const GW_AIA = 'http://crt.sectigo.com/SectigoPublicServerAuthenticationCADVR36.crt';
+
+// ── 보충 소스 ──────────────────────────────────────────────
+const SOURCES = [
+  { key: 'gb', fetch: async () => {   // 경북: 목록 JSON 한 번에 전체
+    const d = JSON.parse(await ok('https://tour.gb.go.kr/travel/selectListAdd.do', { accept: 'application/json',
+      body: 'start=0&end=2000&cd_catetop=03&cd_catemid=02&title=&search=&cd_area=&favority_month=' }));
+    if (String(d.rcode) !== '1' || !Array.isArray(d.data)) throw new Error('rcode ' + d.rcode);
+    return d.data.map(x => ({ n: unent(x.title), a: unent(x.addr_inf), ar: 35, s: dash(x.dt_start), e: dash(x.dt_end),
+      i: x.file_physical ? 'https://tour.gb.go.kr/file/thumbnail2.do?file_physical=' + encodeURIComponent(x.file_physical) : '' }));
+  } },
+  { key: 'dj', fetch: async () => {   // 대전: 페이지에 calEvents JSON 내장 (wr_9/wr_10 = 실제 기간, end는 달력용 +1일)
+    const html = await ok('https://daejeontour.co.kr/festival_djt');
+    const m = html.match(/calEvents\s*=\s*(\[[\s\S]*?\]);/);
+    if (!m) throw new Error('calEvents 없음');
+    return JSON.parse(m[1]).filter(x => (x.type || x.wr_3) === '축제').map(x => ({ n: unent(x.title || x.subject),
+      a: '대전광역시 ' + unent(x.wr_8), ar: 3, s: dash(x.wr_9 || x.start), e: dash(x.wr_10 || x.end), i: x.thumb || '' }));
+  } },
+  { key: 'gw', fetch: async (today) => {   // 강원: 목록 HTML(GET ?pageIndex=, POST는 403), 등록 최신순 → 한 페이지가 전부 종료면 중단
+    const out = [];
+    let ca = null;
+    for (let p = 1; p <= 12; p++) {
+      const o = () => ({ ca });
+      let html;
+      try { html = await ok('https://www.gangwon.to/gwtour/now/festival?pageIndex=' + p, o()); }
+      catch (e) {
+        if (ca || !/certificate/.test(e.message)) throw e;
+        ca = await aiaCa(GW_AIA); html = await ok('https://www.gangwon.to/gwtour/now/festival?pageIndex=' + p, o());
+      }
+      const blocks = html.split(/onclick="goPage\(\d+\); return false;">/).slice(1);
+      if (!blocks.length) break;
+      let live = 0;
+      for (const b of blocks) {
+        const n = unent((b.match(/<strong>([\s\S]*?)<\/strong>/) || [])[1]);
+        const t = unent((b.match(/<time[^>]*>([\s\S]*?)<\/time>/) || [])[1]).split('~').map(s => dash(s));
+        const a = unent((b.match(/<em>장소<\/em>([\s\S]*?)<\/span>/) || [])[1]);
+        const im = (b.match(/<img src="([^"]+)"/) || [])[1] || '';
+        if (!n || !t[0]) continue;
+        const e = t[1] || t[0];
+        if (e.replace(/\./g, '') >= today) live++;
+        out.push({ n, a, ar: 32, s: t[0], e, i: im ? new URL(im, 'https://www.gangwon.to').href : '' });
+      }
+      if (!live && p >= 3) break;
+      await sleep(400);
+    }
+    return out;
+  } },
+  { key: 'jb', fetch: async (today) => {   // 전북: 목록 HTML 40건/페이지, 세션 쿠키 필요, 기간 '2026.11.07~11.08'(끝 연도 생략)
+    const jar = [], base = 'https://tour.jb.go.kr/travel/info/list.do?category_top_id=c&menuCd=DOM_000000110001000000&contentsSid=22';
+    const out = [];
+    for (let p = 1; p <= 6; p++) {
+      const html = await ok(base + '&pageindex=' + p, { jar });
+      const blocks = html.split('class="photoWrap"').slice(1);
+      let live = 0;
+      for (const b of blocks) {
+        const n = unent((b.match(/<strong>([\s\S]*?)<\/strong>/) || [])[1]);
+        const per = (b.match(/기간:\s*([0-9.]+)\s*~\s*([0-9.]*)/) || []);
+        const city = unent((b.match(/list_best_badge">\s*<span>([^<]*)</) || [])[1]);
+        const im = (b.match(/<img src="([^"]+)"/) || [])[1] || '';
+        if (!n || !per[1]) continue;
+        const s = per[1].slice(0, 10);
+        let e = per[2] || s;
+        if (/^\d{2}\.\d{2}$/.test(e)) {   // 끝 연도 생략 → 시작 연도, 시작보다 앞이면 다음 해
+          e = s.slice(0, 4) + '.' + e;
+          if (e < s) e = (Number(s.slice(0, 4)) + 1) + e.slice(4);
+        }
+        if (e.replace(/\./g, '') >= today) live++;
+        out.push({ n, a: '전북특별자치도' + (city ? ' ' + city : ''), ar: 37, s, e, i: im ? new URL(im, 'https://tour.jb.go.kr').href : '' });
+      }
+      if (blocks.length < 40 || (!live && p >= 2)) break;
+      await sleep(400);
+    }
+    return out;
+  } },
+  { key: 'vj', fetch: async () => {   // 제주: 로컬 수집 시드
+    const d = JSON.parse(fs.readFileSync(JEJU, 'utf8'));
+    return (d.data || []).map(x => Object.assign({}, x, { ar: 39 }));
+  } },
+  { key: 'std', fetch: async () => {   // 전국문화축제표준데이터(시군구 직접 등록, 이미지 없음)
+    const rows = [];
+    for (let p = 1; p <= 10; p++) {
+      const q = new URLSearchParams({ serviceKey: KEY, pageNo: String(p), numOfRows: '1000', type: 'json' });
+      const d = JSON.parse(await ok(STD + '?' + q, { accept: 'application/json' }));
+      const r = d.response || d;
+      if (!r.header || r.header.resultCode !== '00') throw new Error('resultCode ' + (r.header && r.header.resultCode));
+      const it = r.body.items && r.body.items.item, arr = !it ? [] : Array.isArray(it) ? it : [it];
+      rows.push(...arr);
+      if (p * 1000 >= Number(r.body.totalCount || 0) || !arr.length) break;
+    }
+    return rows.map(x => { const a = unent(x.rdnmadr || x.lnmadr); return { n: unent(x.fstvlNm), a, ar: areaOfAddr(a),
+      s: dash(x.fstvlStartDate), e: dash(x.fstvlEndDate), i: '' }; })
+      // '1월 1일~12월 31일' 연중 표기는 실제 일정이 아닌 자리값인 경우가 많아 제외
+      .filter(x => !(/\.01\.01$/.test(x.s) && /\.12\.31$/.test(x.e)));
+  } },
+];
+
 (async () => {
   const today = kstToday();
+  const todayDot = fmt(today);
   const { rows, total } = await fetchAll(today);
   const kto = [];
   for (const f of rows) {
@@ -74,42 +226,59 @@ async function fetchAll(today) {
     kto.push({ n: String(f.title || '').trim(), a: String(f.addr1 || '').trim(), ar,
       s: fmt(f.eventstartdate), e: fmt(f.eventenddate),
       i: String(f.firstimage || f.firstimage2 || '').trim().replace(/^http:\/\//, 'https://'),
-      id: String(f.contentid || '') });
+      id: String(f.contentid || ''), src: 'kto' });
   }
 
-  // 제주 VisitJeju 보충(관광공사에 없는 이름만, 종료분 제외)
-  let vj = [], vjAdded = 0;
-  try { vj = JSON.parse(fs.readFileSync(JEJU, 'utf8')).data || []; } catch (e) { console.error('jeju_vj.json 없음/깨짐 — 제주 보충 생략'); }
-  const seen = new Set(kto.filter(x => x.ar === 39).map(x => norm(x.n)));
+  let prevDoc = null;
+  try { prevDoc = JSON.parse(fs.readFileSync(OUT, 'utf8')); } catch (e) { /* 최초 */ }
+  const prev = prevDoc && prevDoc.data ? prevDoc.data.length : 0;
+
   const out = kto.slice();
-  for (const x of vj) {
-    const k = norm(x.n);
-    if (!k || seen.has(k) || String(x.e || '').replace(/\./g, '') < today) continue;
-    seen.add(k); out.push({ n: x.n, a: x.a || '', ar: 39, s: x.s, e: x.e, i: x.i || '' }); vjAdded++;
+  const keys = {};   // ar → [정규화 이름]
+  const addKey = x => { (keys[x.ar] = keys[x.ar] || []).push(norm(x.n)); };
+  const isDup = x => {
+    const k = norm(x.n); if (!k) return true;
+    return (keys[x.ar] || []).some(o => o === k || (Math.min(o.length, k.length) >= 4 && (o.includes(k) || k.includes(o))));
+  };
+  out.forEach(addKey);
+  const stat = {};
+  for (const src of SOURCES) {
+    let items, mode = 'ok';
+    try { items = await src.fetch(today); if (!items.length) throw new Error('0건'); }
+    catch (e) {
+      mode = '실패(' + e.message + ') → 이전값';
+      items = (prevDoc && prevDoc.data || []).filter(x => x.src === src.key);
+    }
+    let added = 0;
+    for (const x of items) {
+      if (!x.ar || !x.n || !/^\d{4}\.\d{2}\.\d{2}$/.test(x.e || '') || x.e < todayDot) continue;
+      const y = { n: x.n, a: x.a || '', ar: x.ar, s: /^\d{4}\.\d{2}\.\d{2}$/.test(x.s || '') ? x.s : x.e, e: x.e, i: x.i || '', src: src.key };
+      if (isDup(y)) continue;
+      addKey(y); out.push(y); added++;
+    }
+    stat[src.key] = added;
+    console.log(`보충 ${src.key}: ${mode}, 후보 ${items.length} → 추가 ${added}`);
   }
   out.sort((p, q) => (p.s < q.s ? -1 : p.s > q.s ? 1 : p.n < q.n ? -1 : p.n > q.n ? 1 : 0));
 
   // 급감 방지: 이전 파일 대비 절반 미만 또는 절대 50건 미만이면 실패
-  let prev = 0;
-  try { prev = (JSON.parse(fs.readFileSync(OUT, 'utf8')).data || []).length; } catch (e) { /* 최초 */ }
   if (out.length < 50 || (prev && out.length < prev * 0.5)) {
     console.error(`결과 급감(이번 ${out.length}, 이전 ${prev}) — 기존 파일 유지`); process.exit(1);
   }
 
   const per = {};
   out.forEach(x => { per[x.ar] = (per[x.ar] || 0) + 1; });
-  const updated = fmt(today);
-  const doc = { updated, dateKey: today, src: { kto: kto.length, jejuVisitJeju: vjAdded }, data: out };
+  const doc = { updated: todayDot, dateKey: today, src: Object.assign({ kto: kto.length }, stat), data: out };
   fs.mkdirSync('tour', { recursive: true });
   fs.writeFileSync(OUT, JSON.stringify(doc));
-  console.log(`API total ${total} → 진행중+예정 ${kto.length} + 제주보충 ${vjAdded} = ${out.length}`, JSON.stringify(per));
+  console.log(`API total ${total} → 관광공사 ${kto.length} + 보충 ${out.length - kto.length} = ${out.length}`, JSON.stringify(per));
 
   const ji = process.argv.indexOf('--js');
   if (ji > 0 && process.argv[ji + 1]) {
-    const body = '// 이달의 축제 (KTO TourAPI searchFestival2 + 제주는 VisitJeju 조합, ' + updated + ' 기준)\n'
+    const body = '// 이달의 축제 (관광공사 TourAPI + 지역 관광사이트·VisitJeju·전국문화축제표준데이터 보충, ' + todayDot + ' 기준)\n'
       + '// 지역(ar)은 areaCode 체계. 앱은 yogurthelp.me/tour/festival.json(매일 수집)을 우선 사용하고 이 파일은 오프라인 폴백.\n'
       + '// 갱신: github.io tools/collect_tour_festival.js --js <이 파일>\n\n'
-      + 'var festUpdate = "' + updated + '";\nvar festData = [\n'
+      + 'var festUpdate = "' + todayDot + '";\nvar festData = [\n'
       + out.map(x => JSON.stringify({ n: x.n, a: x.a, ar: x.ar, s: x.s, e: x.e, i: x.i })).join(',\n') + '\n];\n';
     fs.writeFileSync(process.argv[ji + 1], body);
     console.log('wrote ' + process.argv[ji + 1]);
