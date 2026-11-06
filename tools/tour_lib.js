@@ -81,7 +81,79 @@ function wxCode(addr) {
   return ix.bySido[sd] || '';
 }
 
+// ── 사진 없는 장소/축제 외부 사진 보충 ─────────────────────────
+// ① 위키백과(ko) 대표 이미지(자유 라이선스, 키 불필요) — 제목이 이름과 같고, 이름의 괄호 지역(예: 응봉산(울진))이
+//    문서 제목 괄호와 다르면 버림. 위치도·지도·'사진 필요' 자리 이미지·SVG 제외.
+// ② 카카오 이미지 검색 API(env KAKAO_KEY 있을 때만) — '이름 + 시군구'로 검색, 카카오 썸네일 주소 사용.
+const UA = 'yogurt-tour-collector/1.0 (https://yogurthelp.me)';
+function getH(url, headers) {
+  return new Promise(res => {
+    https.get(url, { timeout: 20000, headers: Object.assign({ 'User-Agent': UA, Accept: 'application/json' }, headers || {}) }, r => {
+      const ch = []; r.on('data', c => ch.push(c)); r.on('end', () => res({ status: r.statusCode, body: Buffer.concat(ch).toString('utf8') }));
+    }).on('error', () => res({ status: 0, body: '' })).on('timeout', function () { this.destroy(); });
+  });
+}
+const nrm = s => String(s || '').replace(/\(.*?\)|\[.*?\]/g, '').replace(/[^가-힣a-zA-Z0-9]/g, '').toLowerCase();
+const paren = s => ((String(s || '').match(/\(([^)]*)\)/) || [])[1] || '').trim();
+const BAD_IMG = /replace_this|location|_loc|locator|map|지도|satellite|daedongyeojido|\.svg|flag|emblem|logo|symbol/i;
+async function wikiImage(name) {
+  const q = String(name).replace(/\s*\(.*?\)\s*/g, ' ').trim();
+  const u = 'https://ko.wikipedia.org/w/api.php?action=query&format=json&generator=search&gsrlimit=3&gsrsearch=' + encodeURIComponent(q) +
+    '&prop=pageimages&piprop=thumbnail&pithumbsize=500';
+  const r = await getH(u);
+  let d; try { d = JSON.parse(r.body); } catch (e) { return ''; }
+  const pages = Object.values((d.query && d.query.pages) || {}).sort((a, b) => a.index - b.index);
+  const pn = paren(name);
+  const p = pages.find(pg => {
+    if (!pg.thumbnail || nrm(pg.title) !== nrm(q)) return false;
+    const pt = paren(pg.title);
+    if (pt && (!pn || !(pt.includes(pn) || pn.includes(pt)))) return false;   // 다른 지역의 동명 장소
+    return !BAD_IMG.test(decodeURIComponent(pg.thumbnail.source));
+  });
+  return p ? p.thumbnail.source : '';
+}
+// 카카오(다음) 이미지 검색 — env KAKAO_KEY(REST API 키) 있을 때만. 썸네일(kakaocdn) 주소 사용.
+// (네이버 검색 API는 2026-07-31 신규 신청 종료·NAVER API HUB 유료 전환으로 사용 안 함)
+async function naverImage(query) {
+  if (!process.env.KAKAO_KEY) return null;   // null = 키 없음(시도 안 함)
+  const r = await getH('https://dapi.kakao.com/v2/search/image?size=5&sort=accuracy&query=' + encodeURIComponent(query),
+    { Authorization: 'KakaoAK ' + process.env.KAKAO_KEY });
+  if (r.status !== 200) throw new Error('kakao ' + r.status);
+  let d; try { d = JSON.parse(r.body); } catch (e) { return ''; }
+  const it = (d.documents || []).find(x => x.thumbnail_url && Number(x.width) >= 300 && Number(x.height) >= 200);
+  return it ? https2(it.thumbnail_url) : '';
+}
+// items 중 사진 없는 것 채움. prevByKey: 이전 파일 항목(키→항목), keyOf(x). 결과 표시: ix='w'(위키)|'n'(카카오 검색), ni=시도일(YYYYMMDD)
+// opt: {wiki:true/false, budget:{left}, naverQuery:(x)=>string}
+async function fillImages(items, prevByKey, keyOf, opt) {
+  const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10).replace(/-/g, '');
+  const stale = d => !d || Number(today) - Number(d) >= 14;   // 못 찾은 건 2주 뒤 재시도
+  const st = { carried: 0, wiki: 0, naver: 0, tried: 0 };
+  for (const x of items) {
+    if (x.i) continue;
+    const pv = prevByKey[keyOf(x)];
+    if (pv && pv.i && pv.ix) { x.i = pv.i; x.ix = pv.ix; st.carried++; continue; }
+    const keyNow = !!process.env.KAKAO_KEY;
+    if (pv && pv.ni && !stale(pv.ni) && !(pv.nk && keyNow)) { x.ni = pv.ni; if (pv.nk) x.nk = 1; continue; }
+    if (opt.budget.left <= 0) { if (pv && pv.ni) x.ni = pv.ni; continue; }
+    opt.budget.left--; st.tried++;
+    try {
+      let u = opt.wiki ? await wikiImage(x.n) : '';
+      if (u) { x.i = u; x.ix = 'w'; st.wiki++; }
+      else {
+        const nv = await naverImage(opt.naverQuery ? opt.naverQuery(x) : x.n);
+        if (nv) { x.i = nv; x.ix = 'n'; st.naver++; }
+        else { x.ni = today; if (nv === null) x.nk = 1; }   // nk: 검색 키 없이 실패 → 키 생기면 바로 재시도
+      }
+    } catch (e) { /* 다음 실행에 재시도 */ }
+    await sleep(150);
+  }
+  return st;
+}
+// 시군구(주소 둘째 토큰)
+const sigungu = a => (String(a || '').trim().split(/\s+/)[1] || '');
+
 const https2 = s => String(s || '').trim().replace(/^http:\/\//, 'https://');
 const num = v => { const n = Number(v); return isFinite(n) && n ? Math.round(n * 1e5) / 1e5 : 0; };
 
-module.exports = { get, sleep, tourApi, sidoOf, groupOf, wxCode, https2, num };
+module.exports = { get, sleep, tourApi, sidoOf, groupOf, wxCode, https2, num, fillImages, wikiImage, naverImage, sigungu };

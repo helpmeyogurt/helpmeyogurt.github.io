@@ -37,6 +37,7 @@ jobs:
       - name: Collect lists
         env:
           DATAGO_KEY: ${{ secrets.DATAGO_TOOL_KEY }}
+          KAKAO_KEY: ${{ secrets.KAKAO_KEY }}
         run: node tools/collect_tour_lists.js
 
       - name: Commit & push

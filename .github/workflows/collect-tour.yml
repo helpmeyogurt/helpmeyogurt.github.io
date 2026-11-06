@@ -37,6 +37,7 @@ jobs:
       - name: Collect festivals
         env:
           DATAGO_KEY: ${{ secrets.DATAGO_TOOL_KEY }}
+          KAKAO_KEY: ${{ secrets.KAKAO_KEY }}
           SEOUL_KEY: ${{ secrets.SEOUL_KEY }}
         run: |
           for i in 1 2 3; do
