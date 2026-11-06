@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-06 18:11 KST",
+ "generated": "2026-11-06 19:06 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -169,10 +169,10 @@
    "key": "car",
    "name": "자동차순위끝판왕",
    "pkg": "me.yogurthelp.car",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "movie",
@@ -241,10 +241,10 @@
    "key": "tour",
    "name": "여행끝판왕",
    "pkg": "me.yogurthelp.tour",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   }
  ]
 }
