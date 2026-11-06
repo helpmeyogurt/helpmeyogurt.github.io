@@ -14,6 +14,7 @@
 // 사용: node tools/collect_tour_festival.js [--js <data_tour_festival.js 경로>]   (--js: 앱 번들용 var festData 파일도 생성)
 'use strict';
 const fs = require('fs');
+const TL = require('./tour_lib');
 const https = require('https');
 const http = require('http');
 const tls = require('tls');
@@ -53,6 +54,7 @@ const norm = s => String(s || '').replace(/\d+/g, '').replace(/[^가-힣a-zA-Z]/
 const unent = s => String(s || '').replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#0?39;/g, "'")
   .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const hash = s => { let h = 5381; for (const c of String(s)) h = ((h * 33) ^ c.codePointAt(0)) >>> 0; return h.toString(36); };
 
 function kstToday() {
   const t = new Date(Date.now() + 9 * 3600e3);
@@ -146,14 +148,16 @@ const SOURCES = [
       body: 'start=0&end=2000&cd_catetop=03&cd_catemid=02&title=&search=&cd_area=&favority_month=' }));
     if (String(d.rcode) !== '1' || !Array.isArray(d.data)) throw new Error('rcode ' + d.rcode);
     return d.data.map(x => ({ n: unent(x.title), a: unent(x.addr_inf), ar: 35, s: dash(x.dt_start), e: dash(x.dt_end),
-      i: x.file_physical ? 'https://tour.gb.go.kr/file/thumbnail2.do?file_physical=' + encodeURIComponent(x.file_physical) : '' }));
+      i: x.file_physical ? 'https://tour.gb.go.kr/file/thumbnail2.do?file_physical=' + encodeURIComponent(x.file_physical) : '',
+      t: unent(x.contact_no), x: TL.num(x.longtitude), y: TL.num(x.latitude), h: 'https://tour.gb.go.kr/travel/festivalView.do?idx=' + x.idx }));
   } },
   { key: 'dj', fetch: async () => {   // 대전: 페이지에 calEvents JSON 내장 (wr_9/wr_10 = 실제 기간, end는 달력용 +1일)
     const html = await ok('https://daejeontour.co.kr/festival_djt');
     const m = html.match(/calEvents\s*=\s*(\[[\s\S]*?\]);/);
     if (!m) throw new Error('calEvents 없음');
     return JSON.parse(m[1]).filter(x => (x.type || x.wr_3) === '축제').map(x => ({ n: unent(x.title || x.subject),
-      a: '대전광역시 ' + unent(x.wr_8), ar: 3, s: dash(x.wr_9 || x.start), e: dash(x.wr_10 || x.end), i: x.thumb || '' }));
+      a: '대전광역시 ' + unent(x.wr_8), ar: 3, s: dash(x.wr_9 || x.start), e: dash(x.wr_10 || x.end), i: x.thumb || '',
+      t: unent(x.wr_2), h: x.href || '' }));
   } },
   { key: 'gw', fetch: async (today) => {   // 강원: 목록 HTML(GET ?pageIndex=, POST는 403), 등록 최신순 → 한 페이지가 전부 종료면 중단
     const out = [];
@@ -196,6 +200,7 @@ const SOURCES = [
         const per = (b.match(/기간:\s*([0-9.]+)\s*~\s*([0-9.]*)/) || []);
         const city = unent((b.match(/list_best_badge">\s*<span>([^<]*)</) || [])[1]);
         const im = (b.match(/<img src="([^"]+)"/) || [])[1] || '';
+        const lk = (b.match(/href="(\/travel\/info\/view\.do[^"]+)"/) || [])[1] || '';
         if (!n || !per[1]) continue;
         const s = per[1].slice(0, 10);
         let e = per[2] || s;
@@ -204,7 +209,8 @@ const SOURCES = [
           if (e < s) e = (Number(s.slice(0, 4)) + 1) + e.slice(4);
         }
         if (e.replace(/\./g, '') >= today) live++;
-        out.push({ n, a: '전북특별자치도' + (city ? ' ' + city : ''), ar: 37, s, e, i: im ? new URL(im, 'https://tour.jb.go.kr').href : '' });
+        out.push({ n, a: '전북특별자치도' + (city ? ' ' + city : ''), ar: 37, s, e, i: im ? new URL(im, 'https://tour.jb.go.kr').href : '',
+          h: lk ? new URL(lk.replace(/&amp;/g, '&'), 'https://tour.jb.go.kr').href : '' });
       }
       if (blocks.length < 40 || (!live && p >= 2)) break;
       await sleep(400);
@@ -225,7 +231,8 @@ const SOURCES = [
         const s = dash(x.STRTDATE), e = dash(x.END_DATE);
         if (e.replace(/\./g, '') >= today) live++;
         out.push({ n: unent(x.TITLE), a: ('서울특별시 ' + unent(x.GUNAME) + ' ' + unent(x.PLACE)).trim(), ar: 1, s, e,
-          i: String(x.MAIN_IMG || '').replace(/^http:\/\//, 'https://') });
+          i: String(x.MAIN_IMG || '').replace(/^http:\/\//, 'https://'), x: TL.num(x.LOT), y: TL.num(x.LAT), t: unent(x.INQUIRY),
+          h: TL.https2(x.HMPG_ADDR || x.ORG_LINK), d: [x.USE_FEE && '요금: ' + unent(x.USE_FEE), x.PRO_TIME && '시간: ' + unent(x.PRO_TIME), unent(x.PROGRAM)].filter(Boolean).join('\n') });
       }
       if (c.row.length < 1000 || (!live && p >= 2)) break;
       await sleep(300);
@@ -241,7 +248,8 @@ const SOURCES = [
       const per = busanPeriod(x.USAGE_DAY_WEEK_AND_TIME);
       return per && { n: unent(String(x.MAIN_TITLE || '').replace(/\s*\([^)]*(한|영)[^)]*\)\s*(\/\/.*)?$/, '')),
         a: ('부산광역시 ' + unent(x.GUGUN_NM) + ' ' + unent(x.MAIN_PLACE || x.ADDR1)).trim(), ar: 6, s: per[0], e: per[1],
-        i: String(x.MAIN_IMG_THUMB || x.MAIN_IMG_NORMAL || '') };
+        i: String(x.MAIN_IMG_THUMB || x.MAIN_IMG_NORMAL || ''), t: unent(x.CNTCT_TEL), x: TL.num(x.LNG), y: TL.num(x.LAT),
+        h: TL.https2(x.HOMEPAGE_URL), d: [unent(x.TITLE), unent(x.SUBTITLE)].filter(Boolean).join(' — ') };
     }).filter(Boolean);
   } },
   { key: 'vj', fetch: async () => {   // 제주: 로컬 수집 시드
@@ -260,7 +268,9 @@ const SOURCES = [
       if (p * 1000 >= Number(r.body.totalCount || 0) || !arr.length) break;
     }
     return rows.map(x => { const a = unent(x.rdnmadr || x.lnmadr); return { n: unent(x.fstvlNm), a, ar: areaOfAddr(a),
-      s: dash(x.fstvlStartDate), e: dash(x.fstvlEndDate), i: '' }; })
+      s: dash(x.fstvlStartDate), e: dash(x.fstvlEndDate), i: '', t: unent(x.phoneNumber), x: TL.num(x.longitude), y: TL.num(x.latitude),
+      h: x.homepageUrl ? (/^https?:/.test(x.homepageUrl) ? '' : 'http://') + String(x.homepageUrl).trim() : '',
+      d: [x.opar && '장소: ' + unent(x.opar).replace(/\+/g, ', '), x.fstvlCo && unent(x.fstvlCo).replace(/\+/g, ', ')].filter(Boolean).join('\n') }; })
       // '1월 1일~12월 31일' 연중 표기는 실제 일정이 아닌 자리값인 경우가 많아 제외
       .filter(x => !(/\.01\.01$/.test(x.s) && /\.12\.31$/.test(x.e)));
   } },
@@ -278,12 +288,39 @@ const SOURCES = [
     kto.push({ n: String(f.title || '').trim(), a: String(f.addr1 || '').trim(), ar,
       s: fmt(f.eventstartdate), e: fmt(f.eventenddate),
       i: String(f.firstimage || f.firstimage2 || '').trim().replace(/^http:\/\//, 'https://'),
-      id: String(f.contentid || ''), src: 'kto' });
+      id: String(f.contentid || ''), src: 'kto', t: String(f.tel || '').trim(), x: TL.num(f.mapx), y: TL.num(f.mapy), m: String(f.modifiedtime || '') });
   }
 
   let prevDoc = null;
   try { prevDoc = JSON.parse(fs.readFileSync(OUT, 'utf8')); } catch (e) { /* 최초 */ }
   const prev = prevDoc && prevDoc.data ? prevDoc.data.length : 0;
+
+  // 관광공사 상세(소개·홈페이지·장소·시간·요금): 새 축제이거나 수정시각(m)이 바뀐 것만 다시 받음(실행당 최대 300건)
+  const prevById = {};
+  (prevDoc && prevDoc.data || []).forEach(x => { if (x.src === 'kto' && x.id) prevById[x.id] = x; });
+  const keep = (it, pv) => { if (pv) { if (pv.d) it.d = pv.d; if (pv.h) it.h = pv.h; } };
+  let dNew = 0, dFail = 0;
+  const KOR = 'https://apis.data.go.kr/B551011/KorService2/';
+  const clean = v => unent(String(v || '').replace(/<br\s*\/?>/gi, ' / ')).trim();
+  for (const it of kto) {
+    const pv = prevById[it.id];
+    if (pv && pv.m === it.m && pv.dd) { keep(it, pv); it.dd = 1; continue; }
+    if (dNew >= 300) { keep(it, pv); continue; }
+    dNew++;
+    try {
+      const c = (await TL.tourApi(KOR, 'detailCommon2', { contentId: it.id }, KEY)).items[0] || {};
+      const n = (await TL.tourApi(KOR, 'detailIntro2', { contentId: it.id, contentTypeId: '15' }, KEY)).items[0] || {};
+      const ov = clean(c.overview);
+      it.d = [n.eventplace && '장소: ' + clean(n.eventplace), n.playtime && '시간: ' + clean(n.playtime),
+        n.usetimefestival && '요금: ' + clean(n.usetimefestival), ov.length > 700 ? ov.slice(0, 700) + '…' : ov].filter(Boolean).join('\n');
+      const hp = String(c.homepage || n.eventhomepage || '');
+      it.h = (hp.match(/href=["']([^"']+)/) || [])[1] || (hp.match(/https?:\/\/[^\s<"]+/) || [])[0] || '';
+      if (!it.t && c.tel) it.t = String(c.tel).trim();
+      it.dd = 1;   // 상세 수집 완료 표시
+    } catch (e) { dFail++; keep(it, pv); }
+    await sleep(120);
+  }
+  console.log(`관광공사 상세: 새로 ${dNew}건${dFail ? ', 실패 ' + dFail : ''}`);
 
   const out = kto.slice();
   const keys = {};   // ar → [정규화 이름]
@@ -305,6 +342,7 @@ const SOURCES = [
     for (const x of items) {
       if (!x.ar || !x.n || !/^\d{4}\.\d{2}\.\d{2}$/.test(x.e || '') || x.e < todayDot) continue;
       const y = { n: x.n, a: x.a || '', ar: x.ar, s: /^\d{4}\.\d{2}\.\d{2}$/.test(x.s || '') ? x.s : x.e, e: x.e, i: x.i || '', src: src.key };
+      for (const f of ['t', 'd', 'h', 'x', 'y']) if (x[f]) y[f] = x[f];
       if (isDup(y)) continue;
       addKey(y); out.push(y); added++;
     }
@@ -318,6 +356,11 @@ const SOURCES = [
     console.error(`결과 급감(이번 ${out.length}, 이전 ${prev}) — 기존 파일 유지`); process.exit(1);
   }
 
+  for (const x of out) {
+    x.w = TL.wxCode(x.a);
+    x.k = x.id ? 'k' + x.id : 'h' + hash(x.n + '|' + x.s);   // 찜 키
+    for (const f of Object.keys(x)) if (x[f] === '' || x[f] === 0 || x[f] === undefined) delete x[f];
+  }
   const per = {};
   out.forEach(x => { per[x.ar] = (per[x.ar] || 0) + 1; });
   const doc = { updated: todayDot, dateKey: today, src: Object.assign({ kto: kto.length }, stat), data: out };
@@ -331,7 +374,7 @@ const SOURCES = [
       + '// 지역(ar)은 areaCode 체계. 앱은 yogurthelp.me/tour/festival.json(매일 수집)을 우선 사용하고 이 파일은 오프라인 폴백.\n'
       + '// 갱신: github.io tools/collect_tour_festival.js --js <이 파일>\n\n'
       + 'var festUpdate = "' + todayDot + '";\nvar festData = [\n'
-      + out.map(x => JSON.stringify({ n: x.n, a: x.a, ar: x.ar, s: x.s, e: x.e, i: x.i })).join(',\n') + '\n];\n';
+      + out.map(x => { const o = Object.assign({}, x); delete o.m; delete o.dd; delete o.src; return JSON.stringify(o); }).join(',\n') + '\n];\n';
     fs.writeFileSync(process.argv[ji + 1], body);
     console.log('wrote ' + process.argv[ji + 1]);
   }

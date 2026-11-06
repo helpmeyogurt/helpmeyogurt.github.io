@@ -1,0 +1,49 @@
+# 여행끝판왕 목록 페이지(공원·휴양림·테마파크·산·호수·캠핑장·반려동물·무장애) → tour/lists.json + tour/l_*.json
+# 하루 2회: 목록은 변경 있을 때만 커밋, 반려동물·무장애 상세는 API 하루 한도 안에서 실행마다 450건씩 채움.
+name: collect-tour-lists
+
+on:
+  schedule:
+    - cron: '40 17 * * *'   # KST 02:40
+    - cron: '40 5 * * *'    # KST 14:40 (상세 증분 2회차 + 캐치업)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: collect-tour-lists
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    uses: ./.github/workflows/live-gate.yml
+
+  collect:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.run != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Collect lists
+        env:
+          DATAGO_KEY: ${{ secrets.DATAGO_TOOL_KEY }}
+        run: node tools/collect_tour_lists.js
+
+      - name: Commit & push
+        run: |
+          git config user.name 'yogurt'
+          git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
+          git add tour/lists.json tour/l_*.json
+          git diff --cached --quiet && echo 'no change' && exit 0
+          git commit -m "tour: 목록 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d\ %H:%M)"
+          git push origin main || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }
