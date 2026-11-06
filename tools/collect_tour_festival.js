@@ -349,6 +349,36 @@ const SOURCES = [
     stat[src.key] = added;
     console.log(`보충 ${src.key}: ${mode}, 후보 ${items.length} → 추가 ${added}`);
   }
+
+  // 사진 없는 보충 축제(주로 표준데이터): 관광공사에서 같은 이름·같은 지역의 축제(지난 회차 포함)를 찾아 대표 사진을 씀.
+  // 이름은 연도·회차를 떼고 비교. 이전 실행에서 찾은 사진(또는 못 찾음 표시 ni)은 이어 써서 매일 다시 찾지 않음(주 1회 재시도).
+  const prevImg = {};
+  (prevDoc && prevDoc.data || []).forEach(x => { if (x.src !== 'kto') prevImg[x.src + '|' + x.n] = x; });
+  const core = n => String(n).replace(/^\s*(\d{4}\s*(년)?|제\s*\d+\s*회)\s*/g, '').replace(/\s*\(.*?\)\s*/g, ' ').trim();
+  const weekly = new Date(Date.now() + 9 * 3600e3).getUTCDay() === 1;
+  let imgFound = 0, imgTried = 0;
+  for (const x of out) {
+    if (x.src === 'kto' || x.i) continue;
+    const pv = prevImg[x.src + '|' + x.n];
+    if (pv && pv.i) { x.i = pv.i; continue; }
+    if (pv && pv.ni && !weekly) { x.ni = 1; continue; }
+    if (imgTried >= 80) continue;
+    imgTried++;
+    try {
+      const kw = core(x.n);
+      const r = await TL.tourApi('https://apis.data.go.kr/B551011/KorService2/', 'searchKeyword2',
+        { keyword: kw, contentTypeId: '15', numOfRows: '20', pageNo: '1', arrange: 'O' }, KEY);
+      const k0 = norm(kw);
+      const hit = r.items.filter(f => f.firstimage && areaOf(f) === x.ar).find(f => {
+        const k1 = norm(core(f.title));
+        return k1 && k0 && (k1 === k0 || (Math.min(k0.length, k1.length) >= 4 && (k1.includes(k0) || k0.includes(k1))));
+      });
+      if (hit) { x.i = TL.https2(hit.firstimage); imgFound++; } else x.ni = 1;
+    } catch (e) { /* 다음 실행에 재시도 */ }
+    await sleep(120);
+  }
+  console.log(`사진 보충: 새로 검색 ${imgTried}건 → 찾음 ${imgFound}건, 사진 없음 ${out.filter(x => !x.i).length}건`);
+
   out.sort((p, q) => (p.s < q.s ? -1 : p.s > q.s ? 1 : p.n < q.n ? -1 : p.n > q.n ? 1 : 0));
 
   // 급감 방지: 이전 파일 대비 절반 미만 또는 절대 50건 미만이면 실패
