@@ -392,7 +392,8 @@ const SOURCES = [
     (prevDoc && prevDoc.data || []).forEach(x => { pk[x.src + '|' + x.n] = x; });
     out.forEach(x => { if (x.ni && !x.i) delete x.ni; });   // 위 관광공사 검색의 ni는 여기 판단과 별개
     const st = await TL.fillImages(out.filter(x => x.src !== 'kto'), pk, x => x.src + '|' + x.n,
-      { wiki: true, budget: { left: 150 }, naverQuery: x => core(x.n) + ' ' + TL.sigungu(x.a) });
+      { wiki: true, budget: { left: 150 }, region: x => TL.sigungu(x.a),
+        ctx: () => ({ pos: /축제|페스티벌|페스타|행사|박람회|대회|축전|마켓|장터|공연|불꽃|해맞이|해넘이|해돋이|타종|트리|빛|전시|체험|걷기|마라톤|음악회|콘서트|문화제|예술제|제$|제\s/, neg: /요양|병원|부동산|분양|아파트|매물|학원/ }) });
     console.log(`외부 사진: 이어씀 ${st.carried}, 새로 시도 ${st.tried} → 위키 ${st.wiki} · 카카오 ${st.naver}, 사진 없음 ${out.filter(x => !x.i).length}건`);
   }
 

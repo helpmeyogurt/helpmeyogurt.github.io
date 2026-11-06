@@ -22,18 +22,21 @@ const FEST = rd('ygt_tour_festival.js');
 const LIST = rd('ygt_tour_listview.js');
 
 // 사이드 메뉴 '여행 정보 더보기' (구버전 ygt.js에는 없음) — 캠핑장·반려동물·무장애는 호수섬 페이지를 빌려 씀
-const MORE = [['ygt1004_Tour_National.html', '국립공원 도립공원'], ['ygt1005_Tour_Forest.html', '자연휴양림 수목원'],
-  ['ygt1006_Tour_ThemePark.html', '테마파크 워터파크'], ['ygt1007_Tour_Mountain.html', '산·강 계곡·바다'],
-  ['ygt1008_Tour_Lake.html', '호수·섬 폭포·동굴'], ['ygt1008_Tour_Lake.html?k=camp', '전국 캠핑장', 1],
-  ['ygt1008_Tour_Lake.html?k=pet', '반려동물 동반여행', 1], ['ygt1008_Tour_Lake.html?k=with', '무장애 여행', 1]];
+const MORE = [['ygt1004_Tour_National.html', '국립공원 도립공원', 0, '🏞️'], ['ygt1005_Tour_Forest.html', '자연휴양림 수목원', 0, '🌲'],
+  ['ygt1006_Tour_ThemePark.html', '테마파크 워터파크', 0, '🎢'], ['ygt1007_Tour_Mountain.html', '산·강 계곡·바다', 0, '⛰️'],
+  ['ygt1008_Tour_Lake.html', '호수·섬 폭포·동굴', 0, '🏝️'], ['ygt1008_Tour_Lake.html?k=camp', '전국 캠핑장', 1, '⛺'],
+  ['ygt1008_Tour_Lake.html?k=pet', '반려동물 동반여행', 1, '🐾'], ['ygt1008_Tour_Lake.html?k=with', '무장애 여행', 1, '♿']];
 const MENU_JS = `
 function tkOtaMenu() {
   var box = document.querySelector('#sideMenu .sideBtnBox');
   if (!box || document.querySelector('#sideMenu .tk-more')) return;
   var items = ${JSON.stringify(MORE)};
   var h = '<div class="title">여행 정보 더보기</div><div class="tk-more">';
-  for (var i = 0; i < items.length; i++) h += '<a href="' + items[i][0] + '" target="_self"' + (items[i][2] ? ' class="new"' : '') + '>' + items[i][1] + '</a>';
+  for (var i = 0; i < items.length; i++) h += '<a href="' + items[i][0] + '" target="_self"' + (items[i][2] ? ' class="new"' : '') + '><span class="ic">' + items[i][3] + '</span><span class="tx">' + items[i][1] + '</span></a>';
   box.insertAdjacentHTML('afterend', h + '</div>');
+  // 구버전 1004~1008 페이지는 없는 아이콘(img/tab/1004~1009.png)을 가리켜 깨진 그림이 보임 → 숨김
+  var bad = box.querySelectorAll('img[src*="img/tab/100"]');
+  for (var j = 0; j < bad.length; j++) { if (/100[4-9].png/.test(bad[j].getAttribute('src'))) { var a = bad[j].closest('a'); if (a) a.style.display = 'none'; } }
 }
 window.addEventListener('load', function () { setTimeout(tkOtaMenu, 300); setTimeout(tkOtaMenu, 1500); });
 `;

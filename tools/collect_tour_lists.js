@@ -66,6 +66,24 @@ const lines = (o, F) => F.map(([k, lab]) => { const v = String(o[k] || '').repla
 const petDetail = async id => { const r = await L.tourApi(PET, 'detailPetTour2', { contentId: id }, KEY); return r.items[0] ? lines(r.items[0], PET_F) : ''; };
 const withDetail = async id => { const r = await L.tourApi(WITH, 'detailWithTour2', { contentId: id }, KEY); return r.items[0] ? lines(r.items[0], WITH_F) : ''; };
 
+// 외부 사진 검증 규칙(블로그 글 제목 기준): pos = 종류에 맞는 말이 있어야, neg = 엉뚱한 말(맛집·요양원 등)이 있으면 버림
+const RX = {
+  pet: /애견|반려|강아지|댕댕|펫|동반/,
+};
+const POS = {
+  parks: [/국립공원|도립공원|군립공원|공원|탐방|등산|산행|트레킹|코스|단풍/],
+  forest: [/휴양림|숲|산책|숙박|캠핑|트레킹/, /수목원|정원|식물원|숲|산책|꽃/],
+  theme: [/테마파크|놀이공원|놀이기구|랜드|월드|파크|가족|아이랑/, /워터파크|물놀이|수영|파크/, /동물원|수족관|아쿠아|사파리|동물/],
+  mountain: [/등산|산행|정상|등산로|트레킹|조망|능선|백패킹|산림|봉|일출/, /강|자전거|산책|둘레길|강변|물놀이|래프팅|카누|캠핑/, /계곡|물놀이|폭포|피서/, /해수욕장|해변|바다|해안|모래|파도|서핑/],
+  lake: [/호수|저수지|둘레길|산책|낚시|댐|공원/, /섬|배편|여객선|트레킹|여행|해변|바다/, /폭포/, /동굴/],
+  camp: [/캠핑|캠프|글램핑|차박|카라반|야영|오토/],
+  pet: [RX.pet, RX.pet, RX.pet, RX.pet],
+  with: [null, null, /호텔|펜션|리조트|숙소|모텔|게스트하우스|스테이|숙박|한옥/, null],
+};
+// 원래 식당인 목록(반려 음식점·무장애 음식점)은 맛집 같은 말을 막지 않음
+const NO_NEG = { 'pet:2': 1, 'with:3': 1 };
+const imgCtx = (key, k) => ({ pos: (POS[key] || [])[k] || (POS[key] || [])[0] || null, neg: NO_NEG[key + ':' + k] ? null : L.FOOD_NEG });
+
 // ── 리스트 정의: types = 탭 이름, fetch → 탭별 항목 배열 ──────────────
 const LISTS = {
   parks: { types: ['국립공원·도립공원'], fetch: async () => {
@@ -150,7 +168,7 @@ function finish(items) {
       {
         const pk = {};
         (prev && prev.items || []).forEach(p => { pk[p.id || p.n + '|' + p.a] = p; });
-        const st = await L.fillImages(items, pk, x => x.id || x.n + '|' + x.a, { wiki: true, budget: imgBudget, naverQuery: x => x.n.replace(/s*(.*?)s*/g, ' ').trim() + ' ' + (key === 'camp' && !/캠핑|캠프|야영|글램핑|카라반/.test(x.n) ? '캠핑장 ' : '') + L.sigungu(x.a) });
+        const st = await L.fillImages(items, pk, x => x.id || x.n + '|' + x.a, { wiki: true, budget: imgBudget, region: x => L.sigungu(x.a), ctx: () => imgCtx(key, k) });
         if (st.tried || st.carried) console.log(`  ${key}[${k}] 사진 보충: 이어씀 ${st.carried}, 새로 시도 ${st.tried} → 위키 ${st.wiki} · 카카오 ${st.naver}${st.err ? ` · 오류 ${st.err}(${st.lastErr})` : ""}`);
       }
       if (def.detail) {

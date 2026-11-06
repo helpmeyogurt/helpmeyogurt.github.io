@@ -56,10 +56,15 @@
 .tk-btn.fav.on { background:#fde8ec; color:#ef4b6c; }
 
 /* 사이드 메뉴 '여행 정보 더보기' */
-.tk-more a { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eee; color:#222; font-size:15px; text-decoration:none; }
-.tk-more a:after { content:'›'; color:#bbb; font-size:20px; }
-.tk-more a.new:before { content:'NEW'; order:2; margin-left:auto; margin-right:8px; font-size:10px; color:#fff; background:#ef4b6c; border-radius:3px; padding:1px 4px; }
+.tk-more a { display:flex; align-items:center; gap:12px; padding:11px 16px; border-bottom:1px solid #eee; color:#1a1a1a; font-size:16px; font-weight:bold; text-decoration:none; }
+.tk-more a .ic { flex:none; width:32px; height:32px; border-radius:9px; background:#eef3fc; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:normal; }
+.tk-more a .tx { flex:1; }
+.tk-more a:after { content:'›'; order:3; color:#bbb; font-size:20px; font-weight:normal; }
+.tk-more a.new:before { content:'NEW'; order:2; margin-right:4px; font-size:10px; font-weight:bold; color:#fff; background:#ef4b6c; border-radius:3px; padding:1px 4px; }
 
 /* 사진 없는 항목: 이름 키워드별 그림 썸네일 */
 .tk-thumb.tk-ph { display:flex; align-items:center; justify-content:center; background-image:linear-gradient(135deg, rgba(255,255,255,.18), rgba(0,0,0,.12)) !important; }
 .tk-thumb.tk-ph span { font-size:28px; line-height:1; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+/* 사이드 메뉴 공통 스타일(#sideMenu a: 가운데·보통 굵기)보다 우선 */
+#sideMenu .tk-more a { text-align:left !important; justify-content:flex-start !important; }
+#sideMenu .tk-more a .tx { text-align:left !important; font-weight:700 !important; font-size:16px !important; color:#1a1a1a !important; letter-spacing:-0.2px; }

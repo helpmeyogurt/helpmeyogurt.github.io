@@ -84,7 +84,7 @@ function wxCode(addr) {
 // ── 사진 없는 장소/축제 외부 사진 보충 ─────────────────────────
 // ① 위키백과(ko) 대표 이미지(자유 라이선스, 키 불필요) — 제목이 이름과 같고, 이름의 괄호 지역(예: 응봉산(울진))이
 //    문서 제목 괄호와 다르면 버림. 위치도·지도·'사진 필요' 자리 이미지·SVG 제외.
-// ② 카카오 이미지 검색 API(env KAKAO_KEY 있을 때만) — '이름 + 시군구'로 검색, 카카오 썸네일 주소 사용.
+// ② 카카오 블로그 검색(env KAKAO_KEY 있을 때만) — 제목에 장소명+종류에 맞는 말이 있는 글의 대표 사진만(blogImage).
 const UA = 'yogurt-tour-collector/1.0 (https://yogurthelp.me)';
 function getH(url, headers) {
   return new Promise(res => {
@@ -114,41 +114,60 @@ async function wikiImage(name) {
 }
 // 카카오(다음) 이미지 검색 — env KAKAO_KEY(REST API 키) 있을 때만. 썸네일(kakaocdn) 주소 사용.
 // (네이버 검색 API는 2026-07-31 신규 신청 종료·NAVER API HUB 유료 전환으로 사용 안 함)
-async function naverImage(query) {
+// 카카오 블로그 검색으로 '검증된' 사진 찾기 — 제목에 장소명이 있고, 종류에 맞는 말(pos)이 있고, 엉뚱한 말(neg)이 없을 때만.
+// (이미지 검색은 글 제목이 없어 '가현산' → 동네 횟집 간판 같은 오류가 생겼음 → 2026-11-06 블로그 검색으로 교체)
+// ctx: { pos: RegExp|null, neg: RegExp|null }
+const FOOD_NEG = /맛집|칼국수|식당|백숙|메뉴|국밥|카페|베이커리|빵집|요양|병원|의원|약국|부동산|분양|아파트|매물|오피스텔|횟집|회집|삼겹|고기집|술집|치킨|피자|중국집|짜장|분식|정육|마트|학원|어린이집|교회|성당|노래방|pc방|미용|네일/i;
+async function blogImage(name, region, ctx) {
   if (!process.env.KAKAO_KEY) return null;   // null = 키 없음(시도 안 함)
-  const r = await getH('https://dapi.kakao.com/v2/search/image?size=5&sort=accuracy&query=' + encodeURIComponent(query),
-    { Authorization: 'KakaoAK ' + process.env.KAKAO_KEY });
-  if (r.status !== 200) throw new Error('kakao ' + r.status);
-  let d; try { d = JSON.parse(r.body); } catch (e) { return ''; }
-  const it = (d.documents || []).find(x => x.thumbnail_url && Number(x.width) >= 300 && Number(x.height) >= 200);
-  // i = 카카오 썸네일(130px, 안정), I = 원본(상세 화면용, https만 — 실패하면 앱이 썸네일로 대체)
-  return it ? { i: https2(it.thumbnail_url), I: /^https:/.test(it.image_url || '') ? it.image_url : '' } : '';
+  const core = String(name).replace(/\s*\(.*?\)\s*/g, ' ').replace(/\s*\[.*?\]\s*/g, ' ').trim();
+  const k = nrm(core);
+  if (k.length < 2) return '';
+  const qs = [core, region ? core + ' ' + region : ''].filter(Boolean);
+  for (const q of qs) {
+    const r = await getH('https://dapi.kakao.com/v2/search/blog?size=15&sort=accuracy&query=' + encodeURIComponent(q),
+      { Authorization: 'KakaoAK ' + process.env.KAKAO_KEY });
+    if (r.status !== 200) throw new Error('kakao ' + r.status);
+    let d; try { d = JSON.parse(r.body); } catch (e) { continue; }
+    const hit = (d.documents || []).find(x => {
+      if (!x.thumbnail) return false;
+      const t = String(x.title || '').replace(/<[^>]+>/g, '').replace(/&[a-z]+;/g, ' ');
+      if (!nrm(t).includes(k)) return false;                 // 제목에 장소명
+      if (ctx && ctx.neg && ctx.neg.test(t)) return false;   // 엉뚱한 말
+      if (ctx && ctx.pos && !ctx.pos.test(t)) return false;  // 종류에 맞는 말
+      return true;
+    });
+    if (hit) return { i: https2(hit.thumbnail), I: '' };
+    await sleep(120);
+  }
+  return '';
 }
-// items 중 사진 없는 것 채움. prevByKey: 이전 파일 항목(키→항목), keyOf(x). 결과 표시: ix='w'(위키)|'n'(카카오 검색), ni=시도일(YYYYMMDD)
-// opt: {wiki:true/false, budget:{left}, naverQuery:(x)=>string}
+// items 중 사진 없는 것 채움. prevByKey: 이전 파일 항목(키→항목), keyOf(x).
+// 표시: ix='w'(위키)|'b'(블로그 검증), ni=못 찾은 날(YYYYMMDD, 2주 뒤 재시도). 예전 이미지 검색 사진(ix='n')은 검증 안 된 것이라 버리고 다시 찾음.
+// opt: { wiki, budget:{left}, region:(x)=>string, ctx:(x)=>{pos,neg} }
 async function fillImages(items, prevByKey, keyOf, opt) {
   const today = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10).replace(/-/g, '');
-  const stale = d => !d || Number(today) - Number(d) >= 14;   // 못 찾은 건 2주 뒤 재시도
+  const stale = d => !d || Number(today) - Number(d) >= 14;
   const st = { carried: 0, wiki: 0, naver: 0, tried: 0 };
   for (const x of items) {
+    if (x.ix === 'n') { delete x.i; delete x.I; delete x.ix; }   // 이전 실행이 남긴 검증 안 된 사진
     if (x.i) continue;
     const pv = prevByKey[keyOf(x)];
-    if (pv && pv.i && pv.ix) { x.i = pv.i; x.ix = pv.ix; if (pv.I && pv.ix === 'n') x.I = pv.I; st.carried++; continue; }
+    if (pv && pv.i && (pv.ix === 'w' || pv.ix === 'b')) { x.i = pv.i; x.ix = pv.ix; st.carried++; continue; }
     const keyNow = !!process.env.KAKAO_KEY;
-    if (pv && pv.ni && !stale(pv.ni) && !(pv.nk && keyNow) && !process.env.IMG_RETRY) { x.ni = pv.ni; if (pv.nk) x.nk = 1; continue; }
-    if (opt.budget.left <= 0) { if (pv && pv.ni) x.ni = pv.ni; continue; }
+    const pvTried = pv && pv.ni && pv.niv === 2;   // 새 방식으로 시도했던 기록만 인정
+    if (pvTried && !stale(pv.ni) && !(pv.nk && keyNow) && !process.env.IMG_RETRY) { x.ni = pv.ni; x.niv = 2; if (pv.nk) x.nk = 1; continue; }
+    if (opt.budget.left <= 0) continue;
     opt.budget.left--; st.tried++;
     try {
-      let u = opt.wiki ? await wikiImage(x.n) : '';
+      const u = opt.wiki ? await wikiImage(x.n) : '';
       if (u) { x.i = u; x.ix = 'w'; st.wiki++; }
       else {
-        const q1 = opt.naverQuery ? opt.naverQuery(x) : x.n, q2 = String(x.n).replace(/s*(.*?)s*/g, ' ').trim();
-        let nv = await naverImage(q1);
-        if (nv === '' && q2 && q2 !== q1 && q2.replace(/\s/g, '').length >= 4) { await sleep(120); nv = await naverImage(q2); }   // 지역 붙여 없으면 이름만
-        if (nv) { x.i = nv.i; if (nv.I) x.I = nv.I; x.ix = 'n'; st.naver++; }
-        else { x.ni = today; if (nv === null) x.nk = 1; }   // nk: 검색 키 없이 실패 → 키 생기면 바로 재시도
+        const nv = await blogImage(x.n, opt.region ? opt.region(x) : '', opt.ctx ? opt.ctx(x) : null);
+        if (nv) { x.i = nv.i; x.ix = 'b'; st.naver++; }
+        else { x.ni = today; x.niv = 2; if (nv === null) x.nk = 1; }
       }
-    } catch (e) { st.err = (st.err || 0) + 1; st.lastErr = e.message; /* 다음 실행에 재시도 */ }
+    } catch (e) { st.err = (st.err || 0) + 1; st.lastErr = e.message; }
     await sleep(150);
   }
   return st;
@@ -159,4 +178,4 @@ const sigungu = a => (String(a || '').trim().split(/\s+/)[1] || '');
 const https2 = s => String(s || '').trim().replace(/^http:\/\//, 'https://');
 const num = v => { const n = Number(v); return isFinite(n) && n ? Math.round(n * 1e5) / 1e5 : 0; };
 
-module.exports = { get, sleep, tourApi, sidoOf, groupOf, wxCode, https2, num, fillImages, wikiImage, naverImage, sigungu };
+module.exports = { get, sleep, tourApi, sidoOf, groupOf, wxCode, https2, num, fillImages, wikiImage, blogImage, FOOD_NEG, sigungu };
