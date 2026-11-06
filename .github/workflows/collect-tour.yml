@@ -46,17 +46,22 @@ jobs:
           done
           exit 1
 
-      # 기존 설치 앱용: 같은 목록을 앱 콘텐츠 키로 암호화해 원격 데이터(data_pub)로 — 업데이트 없이 매일 반영
+      # 기존 설치 앱용: 축제 목록 + 새 화면(축제·목록 7종·사이드 메뉴)을 앱 콘텐츠 키로 암호화해 원격 데이터로 — 앱 업데이트 없이 반영
       - name: Encrypt for installed apps
         env:
           CONTENT_KEY: ${{ secrets.CONTENT_KEY }}
-        run: node tools/enc_publish.js "$RUNNER_TEMP/data_tour_festival.js" data_pub/tour/data/data_tour_festival.js.enc
+        run: |
+          # 축제 목록 + 새 화면 코드(구버전 앱용 원격 업데이트, tools/build_tour_ota.js) → 6개 데이터 파일 암호화
+          node tools/build_tour_ota.js "$RUNNER_TEMP/data_tour_festival.js" "$RUNNER_TEMP/ota"
+          for f in data_tour_festival data_tour_list1 data_tour_list2 data_tour_list3 data_tour_list4 data_tour_list5; do
+            node tools/enc_publish.js "$RUNNER_TEMP/ota/$f.js" "data_pub/tour/data/$f.js.enc"
+          done
 
       - name: Commit & push
         run: |
           git config user.name 'yogurt'
           git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
-          git add tour/festival.json data_pub/tour/data/data_tour_festival.js.enc
+          git add tour/festival.json data_pub/tour/data/
           git diff --cached --quiet && echo 'no change' && exit 0
           git commit -m "tour: 축제 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d\ %H:%M)"
           git push origin main || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }

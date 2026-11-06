@@ -1,0 +1,65 @@
+/* 여행끝판왕 확장 UI — 필터 칩, 썸네일 카드, 상세 시트, 날씨·미세먼지, 찜 (ygt/ygt_tour_common.js) */
+
+.tk-bar { display:flex; align-items:center; gap:5px; padding:8px 10px 4px; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; }
+.tk-bar::-webkit-scrollbar { display:none; }
+.tk-chip { flex:none; border:1px solid #d5dbe6; background:#fff; color:#555; border-radius:16px; padding:5px 9px; font-size:12.5px; line-height:1.2; }
+.tk-chip.on { background:#3069cf; border-color:#3069cf; color:#fff; }
+.tk-chip.near { margin-left:auto; }
+.tk-chip.near.on { background:#0b8f6a; border-color:#0b8f6a; }
+.tk-count { padding:4px 14px 2px; font-size:12px; color:#888; }
+.tk-count b { color:#3069cf; font-weight:normal; }
+
+.tk-list { list-style:none; margin:0; padding:0 12px 10px; background:#fff; }
+.tk-item { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #eee; position:relative; }
+.tk-item:last-child { border-bottom:none; }
+.tk-thumb { flex:none; width:78px; height:58px; border-radius:6px; overflow:hidden; background:#eef1f5; }
+.tk-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+.tk-body { flex:1; min-width:0; }
+.tk-name { font-size:15px; color:#222; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tk-sub { font-size:12.5px; color:#777; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tk-tags { margin-top:4px; display:flex; gap:4px; flex-wrap:wrap; }
+.tk-tag { font-size:11px; padding:1px 6px; border-radius:3px; background:#eef3fc; color:#3069cf; }
+.tk-tag.nat { background:#3069cf; color:#fff; }
+.tk-tag.ing { background:#e8f7ef; color:#0b8f6a; }
+.tk-tag.soon { background:#fff4e5; color:#d97706; }
+.tk-tag.dist { background:#f1f1f1; color:#555; }
+.tk-heart { flex:none; width:34px; height:34px; line-height:34px; text-align:center; font-size:20px; color:#cfd4dc; }
+.tk-heart.on { color:#ef4b6c; }
+.tk-empty { padding:40px 16px; text-align:center; color:#888; font-size:14px; line-height:1.6; background:#fff; }
+.tk-update { text-align:right; padding:6px 14px 14px; font-size:12px; color:#999; background:#fff; }
+
+/* 상세 시트 */
+.tk-dim { position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.45); z-index:9998; opacity:0; transition:opacity .2s; }
+.tk-dim.show { opacity:1; }
+.tk-sheet { position:fixed; left:0; right:0; bottom:0; max-height:86%; background:#fff; border-radius:14px 14px 0 0; z-index:9999;
+  transform:translateY(100%); transition:transform .22s ease-out; display:flex; flex-direction:column; }
+.tk-sheet.show { transform:translateY(0); }
+.tk-sheet-head { display:flex; align-items:flex-start; gap:8px; padding:14px 14px 8px; border-bottom:1px solid #f0f0f0; }
+.tk-sheet-title { flex:1; font-size:17px; font-weight:bold; color:#222; line-height:1.35; }
+.tk-sheet-x { flex:none; font-size:24px; line-height:24px; color:#999; padding:0 4px; }
+.tk-sheet-body { overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 14px 16px; }
+.tk-hero { margin:12px 0 4px; border-radius:8px; overflow:hidden; background:#eef1f5; max-height:220px; }
+.tk-hero img { width:100%; display:block; max-height:220px; object-fit:cover; }
+.tk-rows { margin:10px 0 2px; }
+.tk-row { display:flex; gap:10px; padding:6px 0; font-size:14px; border-bottom:1px dashed #eee; }
+.tk-row .k { flex:none; width:64px; color:#888; }
+.tk-row .v { flex:1; color:#333; word-break:break-all; }
+.tk-row .v a { color:#3069cf; }
+.tk-wx { margin:10px 0; padding:10px 12px; border-radius:8px; background:#f3f7fd; font-size:13.5px; color:#333; line-height:1.6; }
+.tk-wx .t { color:#3069cf; font-weight:bold; margin-right:4px; }
+.tk-wx .g1 { color:#1d7bd8; } .tk-wx .g2 { color:#0b8f6a; } .tk-wx .g3 { color:#d97706; } .tk-wx .g4 { color:#d93636; }
+.tk-wx .muted { color:#999; font-size:12px; }
+.tk-desc { margin-top:10px; font-size:14px; color:#444; line-height:1.65; white-space:pre-line; }
+.tk-btns { display:flex; gap:8px; padding:10px 14px calc(10px + env(safe-area-inset-bottom)); border-top:1px solid #f0f0f0; }
+.tk-btn { flex:1; text-align:center; padding:10px 0; border-radius:8px; background:#f1f4f9; color:#333; font-size:14px; text-decoration:none; }
+.tk-btn.pri { background:#3069cf; color:#fff; }
+.tk-btn.fav.on { background:#fde8ec; color:#ef4b6c; }
+
+/* 사이드 메뉴 '여행 정보 더보기' */
+.tk-more a { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #eee; color:#222; font-size:15px; text-decoration:none; }
+.tk-more a:after { content:'›'; color:#bbb; font-size:20px; }
+.tk-more a.new:before { content:'NEW'; order:2; margin-left:auto; margin-right:8px; font-size:10px; color:#fff; background:#ef4b6c; border-radius:3px; padding:1px 4px; }
+
+/* 사진 없는 항목: 이름 키워드별 그림 썸네일 */
+.tk-thumb.tk-ph { display:flex; align-items:center; justify-content:center; background-image:linear-gradient(135deg, rgba(255,255,255,.18), rgba(0,0,0,.12)) !important; }
+.tk-thumb.tk-ph span { font-size:28px; line-height:1; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
