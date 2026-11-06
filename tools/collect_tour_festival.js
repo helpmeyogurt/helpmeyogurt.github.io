@@ -4,6 +4,7 @@
 //      gb 경북 tour.gb.go.kr 목록 JSON / dj 대전 daejeontour.co.kr 페이지 내장 calEvents
 //      gw 강원 gangwon.to 목록 HTML / jb 전북 tour.jb.go.kr 목록 HTML(세션 쿠키)
 //      vj 제주 VisitJeju 시드(tour/jeju_vj.json — 세션 토큰이 필요해 로컬 브라우저로 수집해 올림)
+//      se 서울 열린데이터 문화행사(축제-*, env SEOUL_KEY) / bs 부산 data.go.kr 부산축제정보(기간 자유 텍스트 해석)
 //      std 전국문화축제표준데이터(data.go.kr, 시군구 직접 등록, 이미지 없음)
 //  · 소스별 격리: 보충 소스가 실패하면 이전 festival.json의 그 소스 항목(미종료분)을 이어 씀.
 // GitHub Actions에서 실행(env DATAGO_KEY = data.go.kr 일반 인증키 decoding). 키는 출력에 절대 쓰지 않음.
@@ -67,7 +68,7 @@ function req(url, opt = {}, hop = 0) {
     if (opt.body) { headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'; headers['Content-Length'] = Buffer.byteLength(opt.body); }
     const ro = { method: opt.body ? 'POST' : 'GET', headers, timeout: 60000 };
     if (opt.ca) ro.ca = opt.ca;
-    const r = https.request(u, ro, res => {
+    const r = (u.protocol === 'http:' ? http : https).request(u, ro, res => {
       if (opt.jar) for (const c of res.headers['set-cookie'] || []) opt.jar.push(c.split(';')[0]);
       if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location && hop < 3) {
         res.resume(); return resolve(req(new URL(res.headers.location, u).href, Object.assign({}, opt, { body: null }), hop + 1));
@@ -118,7 +119,25 @@ function aiaCa(url) {
     }).on('error', reject).on('timeout', function () { this.destroy(new Error('timeout')); });
   });
 }
-const GW_AIA = 'http://crt.sectigo.com/SectigoPublicServerAuthenticationCADVR36.crt';
+// 부산 기간 자유 텍스트 → [시작, 끝] ('2026. 5. 15. ~ 5. 24.', '2025년 11월 29일 ~ 2026년 1월 18일', '2026.04.17.~04.19.' 등)
+// 시작은 연도 필수, 끝은 연도 생략 시 시작 연도(끝이 앞서면 다음 해). 해석 불가면 null.
+function busanPeriod(t) {
+  const txt = String(t || '').split('\n')[0];
+  const [a, b] = txt.split('~');
+  const full = /(\d{4})\s*[.년]\s*(\d{1,2})\s*[.월]\s*(\d{1,2})/;
+  const m = (a || '').match(full);
+  if (!m) return null;
+  const p2 = n => String(n).padStart(2, '0');
+  const s = m[1] + '.' + p2(m[2]) + '.' + p2(m[3]);
+  let e = s;
+  if (b) {
+    const f = b.match(full), md = b.match(/(\d{1,2})\s*[.월]\s*(\d{1,2})/);
+    if (f) e = f[1] + '.' + p2(f[2]) + '.' + p2(f[3]);
+    else if (md) { e = m[1] + '.' + p2(md[1]) + '.' + p2(md[2]); if (e < s) e = (Number(m[1]) + 1) + e.slice(4); }
+  }
+  return [s, e];
+}
+const GW_AIA ='http://crt.sectigo.com/SectigoPublicServerAuthenticationCADVR36.crt';
 
 // ── 보충 소스 ──────────────────────────────────────────────
 const SOURCES = [
@@ -191,6 +210,39 @@ const SOURCES = [
       await sleep(400);
     }
     return out;
+  } },
+  { key: 'se', fetch: async (today) => {   // 서울: 열린데이터 문화행사(culturalEventInfo) 중 분류 '축제-*'. 최근 등록순 → 앞 페이지만
+    const SK = process.env.SEOUL_KEY;
+    if (!SK) throw new Error('SEOUL_KEY 미설정');
+    const out = [];
+    for (let p = 0; p < 6; p++) {
+      const d = JSON.parse(await ok(`http://openapi.seoul.go.kr:8088/${encodeURIComponent(SK)}/json/culturalEventInfo/${p * 1000 + 1}/${p * 1000 + 1000}/`, { accept: 'application/json' }));
+      const c = d.culturalEventInfo;
+      if (!c || !Array.isArray(c.row)) throw new Error((d.RESULT && d.RESULT.CODE) || '응답 형식');
+      let live = 0;
+      for (const x of c.row) {
+        if (!/^축제/.test(x.CODENAME || '')) continue;
+        const s = dash(x.STRTDATE), e = dash(x.END_DATE);
+        if (e.replace(/\./g, '') >= today) live++;
+        out.push({ n: unent(x.TITLE), a: ('서울특별시 ' + unent(x.GUNAME) + ' ' + unent(x.PLACE)).trim(), ar: 1, s, e,
+          i: String(x.MAIN_IMG || '').replace(/^http:\/\//, 'https://') });
+      }
+      if (c.row.length < 1000 || (!live && p >= 2)) break;
+      await sleep(300);
+    }
+    return out;
+  } },
+  { key: 'bs', fetch: async () => {   // 부산: data.go.kr 부산축제정보(대표 축제 40여 개). 기간이 자유 텍스트라 해석
+    const q = new URLSearchParams({ serviceKey: KEY, pageNo: '1', numOfRows: '300', resultType: 'json' });
+    const d = JSON.parse(await ok('https://apis.data.go.kr/6260000/FestivalService/getFestivalKr?' + q, { accept: 'application/json' }));
+    const g = d.getFestivalKr;
+    if (!g || !g.header || g.header.code !== '00') throw new Error('code ' + (g && g.header && g.header.code));
+    return (g.item || []).map(x => {
+      const per = busanPeriod(x.USAGE_DAY_WEEK_AND_TIME);
+      return per && { n: unent(String(x.MAIN_TITLE || '').replace(/\s*\([^)]*(한|영)[^)]*\)\s*(\/\/.*)?$/, '')),
+        a: ('부산광역시 ' + unent(x.GUGUN_NM) + ' ' + unent(x.MAIN_PLACE || x.ADDR1)).trim(), ar: 6, s: per[0], e: per[1],
+        i: String(x.MAIN_IMG_THUMB || x.MAIN_IMG_NORMAL || '') };
+    }).filter(Boolean);
   } },
   { key: 'vj', fetch: async () => {   // 제주: 로컬 수집 시드
     const d = JSON.parse(fs.readFileSync(JEJU, 'utf8'));
