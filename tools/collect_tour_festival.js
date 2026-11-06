@@ -378,14 +378,14 @@ const SOURCES = [
     await sleep(120);
   }
   console.log(`사진 보충: 새로 검색 ${imgTried}건 → 찾음 ${imgFound}건, 사진 없음 ${out.filter(x => !x.i).length}건`);
-  // 그래도 없으면 위키백과 → 네이버 이미지 검색(키 있을 때). 찾은 사진(ix)은 다음 실행에 이어 씀
+  // 그래도 없으면 위키백과 → 카카오 이미지 검색(키 있을 때). 찾은 사진(ix)은 다음 실행에 이어 씀
   {
     const pk = {};
     (prevDoc && prevDoc.data || []).forEach(x => { pk[x.src + '|' + x.n] = x; });
     out.forEach(x => { if (x.ni && !x.i) delete x.ni; });   // 위 관광공사 검색의 ni는 여기 판단과 별개
     const st = await TL.fillImages(out.filter(x => x.src !== 'kto'), pk, x => x.src + '|' + x.n,
       { wiki: true, budget: { left: 150 }, naverQuery: x => core(x.n) + ' ' + TL.sigungu(x.a) });
-    console.log(`외부 사진: 이어씀 ${st.carried}, 새로 시도 ${st.tried} → 위키 ${st.wiki} · 네이버 ${st.naver}, 사진 없음 ${out.filter(x => !x.i).length}건`);
+    console.log(`외부 사진: 이어씀 ${st.carried}, 새로 시도 ${st.tried} → 위키 ${st.wiki} · 카카오 ${st.naver}, 사진 없음 ${out.filter(x => !x.i).length}건`);
   }
 
   out.sort((p, q) => (p.s < q.s ? -1 : p.s > q.s ? 1 : p.n < q.n ? -1 : p.n > q.n ? 1 : 0));

@@ -121,7 +121,8 @@ async function naverImage(query) {
   if (r.status !== 200) throw new Error('kakao ' + r.status);
   let d; try { d = JSON.parse(r.body); } catch (e) { return ''; }
   const it = (d.documents || []).find(x => x.thumbnail_url && Number(x.width) >= 300 && Number(x.height) >= 200);
-  return it ? https2(it.thumbnail_url) : '';
+  // i = 카카오 썸네일(130px, 안정), I = 원본(상세 화면용, https만 — 실패하면 앱이 썸네일로 대체)
+  return it ? { i: https2(it.thumbnail_url), I: /^https:/.test(it.image_url || '') ? it.image_url : '' } : '';
 }
 // items 중 사진 없는 것 채움. prevByKey: 이전 파일 항목(키→항목), keyOf(x). 결과 표시: ix='w'(위키)|'n'(카카오 검색), ni=시도일(YYYYMMDD)
 // opt: {wiki:true/false, budget:{left}, naverQuery:(x)=>string}
@@ -132,20 +133,22 @@ async function fillImages(items, prevByKey, keyOf, opt) {
   for (const x of items) {
     if (x.i) continue;
     const pv = prevByKey[keyOf(x)];
-    if (pv && pv.i && pv.ix) { x.i = pv.i; x.ix = pv.ix; st.carried++; continue; }
+    if (pv && pv.i && pv.ix) { x.i = pv.i; x.ix = pv.ix; if (pv.I && pv.ix === 'n') x.I = pv.I; st.carried++; continue; }
     const keyNow = !!process.env.KAKAO_KEY;
-    if (pv && pv.ni && !stale(pv.ni) && !(pv.nk && keyNow)) { x.ni = pv.ni; if (pv.nk) x.nk = 1; continue; }
+    if (pv && pv.ni && !stale(pv.ni) && !(pv.nk && keyNow) && !process.env.IMG_RETRY) { x.ni = pv.ni; if (pv.nk) x.nk = 1; continue; }
     if (opt.budget.left <= 0) { if (pv && pv.ni) x.ni = pv.ni; continue; }
     opt.budget.left--; st.tried++;
     try {
       let u = opt.wiki ? await wikiImage(x.n) : '';
       if (u) { x.i = u; x.ix = 'w'; st.wiki++; }
       else {
-        const nv = await naverImage(opt.naverQuery ? opt.naverQuery(x) : x.n);
-        if (nv) { x.i = nv; x.ix = 'n'; st.naver++; }
+        const q1 = opt.naverQuery ? opt.naverQuery(x) : x.n, q2 = String(x.n).replace(/s*(.*?)s*/g, ' ').trim();
+        let nv = await naverImage(q1);
+        if (nv === '' && q2 && q2 !== q1 && q2.replace(/\s/g, '').length >= 4) { await sleep(120); nv = await naverImage(q2); }   // 지역 붙여 없으면 이름만
+        if (nv) { x.i = nv.i; if (nv.I) x.I = nv.I; x.ix = 'n'; st.naver++; }
         else { x.ni = today; if (nv === null) x.nk = 1; }   // nk: 검색 키 없이 실패 → 키 생기면 바로 재시도
       }
-    } catch (e) { /* 다음 실행에 재시도 */ }
+    } catch (e) { st.err = (st.err || 0) + 1; st.lastErr = e.message; /* 다음 실행에 재시도 */ }
     await sleep(150);
   }
   return st;

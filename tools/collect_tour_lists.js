@@ -146,12 +146,12 @@ function finish(items) {
         console.error(`${key}[${k}] 급감(${items.length} < 이전 ${prev.items.length}) — 이전 파일 유지`);
         counts.push(prev.items.length); continue;
       }
-      // 사진 없는 곳: 이전에 찾은 외부 사진 이어 쓰기 → 위키백과 → 네이버 이미지(키 있을 때)
+      // 사진 없는 곳: 이전에 찾은 외부 사진 이어 쓰기 → 위키백과 → 카카오 이미지(키 있을 때)
       {
         const pk = {};
         (prev && prev.items || []).forEach(p => { pk[p.id || p.n + '|' + p.a] = p; });
-        const st = await L.fillImages(items, pk, x => x.id || x.n + '|' + x.a, { wiki: true, budget: imgBudget, naverQuery: x => x.n.replace(/s*(.*?)s*/g, ' ').trim() + ' ' + L.sigungu(x.a) });
-        if (st.tried || st.carried) console.log(`  ${key}[${k}] 사진 보충: 이어씀 ${st.carried}, 새로 시도 ${st.tried} → 위키 ${st.wiki} · 네이버 ${st.naver}`);
+        const st = await L.fillImages(items, pk, x => x.id || x.n + '|' + x.a, { wiki: true, budget: imgBudget, naverQuery: x => x.n.replace(/s*(.*?)s*/g, ' ').trim() + ' ' + (key === 'camp' && !/캠핑|캠프|야영|글램핑|카라반/.test(x.n) ? '캠핑장 ' : '') + L.sigungu(x.a) });
+        if (st.tried || st.carried) console.log(`  ${key}[${k}] 사진 보충: 이어씀 ${st.carried}, 새로 시도 ${st.tried} → 위키 ${st.wiki} · 카카오 ${st.naver}${st.err ? ` · 오류 ${st.err}(${st.lastErr})` : ""}`);
       }
       if (def.detail) {
         const pm = {};
