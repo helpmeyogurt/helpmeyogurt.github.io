@@ -28,6 +28,9 @@ const MORE = [['ygt1004_Tour_National.html', '국립공원 도립공원', 0, '�
   ['ygt1008_Tour_Lake.html?k=pet', '반려동물 동반여행', 1, '🐾'], ['ygt1008_Tour_Lake.html?k=with', '무장애 여행', 1, '♿']];
 const MENU_JS = `
 function tkOtaMenu() {
+  // 구버전은 메뉴 자체의 터치 스크롤을 막아 둠 → 항목이 늘어 화면을 넘으면 아래가 안 보임. 차단 해제 + 세로 스크롤
+  var sm = document.getElementById('sideMenu');
+  if (sm && window.jQuery) { jQuery(sm).off('scroll touchmove mousewheel'); sm.style.overflowY = 'auto'; sm.style.overflowX = 'hidden'; sm.style.overscrollBehavior = 'contain'; }
   var box = document.querySelector('#sideMenu .sideBtnBox');
   if (!box || document.querySelector('#sideMenu .tk-more')) return;
   var items = ${JSON.stringify(MORE)};
