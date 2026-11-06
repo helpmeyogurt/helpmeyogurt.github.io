@@ -27,7 +27,7 @@ const APPS = [
   { key: 'tax', name: '세금정보끝판왕', pkg: 'me.yogurthelp.tax', target: '5.2.0' },
   { key: 'phone', name: '휴대폰끝판왕', pkg: 'me.yogurthelp.phone', target: '5.2.0' },
   { key: 'phonemem', name: '휴대폰멤버십끝판왕', pkg: 'me.yogurthelp.phonemem', target: '5.2.0' },
-  { key: 'car', name: '자동차순위끝판왕', pkg: 'me.yogurthelp.car', target: '5.2.0' },
+  { key: 'car', name: '자동차순위끝판왕', pkg: 'me.yogurthelp.car', target: '5.2.1' },
   { key: 'movie', name: '박스오피스끝판왕', pkg: 'me.yogurthelp.movie', target: '5.2.0' },
   { key: 'tv', name: '시청률끝판왕', pkg: 'me.yogurthelp.tv', target: '5.2.1' },
   { key: 'music', name: '음원차트끝판왕', pkg: 'me.yogurthelp.music', target: '5.2.0' },
@@ -35,7 +35,7 @@ const APPS = [
   { key: 'perform', name: '공연순위끝판왕', pkg: 'me.yogurthelp.perform', target: '5.2.0' },
   { key: 'tool', name: '도구모음끝판왕', pkg: 'me.yogurthelp.tool', target: '5.2.0' },
   { key: 'election', name: '선거끝판왕', pkg: 'me.yogurthelp.election', target: '5.2.0' },
-  { key: 'tour', name: '여행끝판왕', pkg: 'me.yogurthelp.tour', target: '5.2.0' },
+  { key: 'tour', name: '여행끝판왕', pkg: 'me.yogurthelp.tour', target: '5.2.1' },
 ];
 
 function get(url) {
