@@ -1,0 +1,4 @@
+carbuild/assets/
+carbuild/tool/raw/
+carbuild/.secret/
+carbuild/state.tgz

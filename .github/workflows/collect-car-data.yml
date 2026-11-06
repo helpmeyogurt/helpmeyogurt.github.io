@@ -1,0 +1,83 @@
+# 자동차순위끝판왕 월별 통계(원격 암호화 데이터) 자동 갱신 — 주 2회
+#  0904 미국 월간(GCBC) / 0910 미국 시장 총량(FRED) / 0908 국내 등록(국토부 통계누리 xlsx) / 0909 신규등록(공공데이터)
+#  carbuild/tool/의 생성 스크립트 실행 → 결과 data/*.js를 앱과 같은 콘텐츠 키로 암호화해 data_pub/car/data/*.enc 갱신
+#  (기존 설치 앱도 업데이트 없이 받음). 과거 데이터·월별 캐시는 carbuild/state.enc(암호화)로 보존.
+#  스크립트별로 실패를 격리 — 하나가 실패해도 나머지는 갱신. 평문 데이터는 커밋하지 않음(.gitignore).
+name: collect-car-data
+
+on:
+  schedule:
+    - cron: '10 19 * * 0,3'   # KST 월·목 04:10
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: collect-car-data
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    uses: ./.github/workflows/live-gate.yml
+
+  collect:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.run != 'false' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CONTENT_KEY: ${{ secrets.CONTENT_KEY }}
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Prepare
+        env:
+          DATAGO_KEY: ${{ secrets.DATAGO_KEY }}
+          FRED_KEY: ${{ secrets.FRED_KEY }}
+        run: |
+          pip install --quiet openpyxl
+          mkdir -p carbuild/.secret carbuild/assets/html/car/data
+          printf '%s' "$DATAGO_KEY" > carbuild/.secret/datago_key.txt
+          printf '%s' "$FRED_KEY" > carbuild/.secret/fred_api_key.txt
+          node tools/car_auto.js unpack
+
+      - name: US monthly (GCBC)
+        continue-on-error: true
+        run: python carbuild/tool/build_car_usa.py
+
+      - name: US market totals (FRED)
+        continue-on-error: true
+        run: python carbuild/tool/build_car_usa_total.py
+
+      - name: KOR registrations (MOLIT)
+        continue-on-error: true
+        run: python carbuild/tool/build_car_molit.py
+
+      - name: KOR new registrations (data.go.kr)
+        continue-on-error: true
+        run: python carbuild/tool/build_car_datago.py
+
+      - name: Encrypt & commit
+        run: |
+          node tools/car_auto.js publish
+          node tools/car_auto.js pack
+          rm -rf carbuild/.secret
+          git config user.name 'yogurt'
+          git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
+          git add data_pub/car/data/ carbuild/state.enc carbuild/state.sha256
+          git diff --cached --quiet && echo 'no change' && exit 0
+          git commit -m "data: car 월별 통계 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d)"
+          git push origin main || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }
