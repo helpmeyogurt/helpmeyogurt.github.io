@@ -41,16 +41,22 @@ jobs:
           SEOUL_KEY: ${{ secrets.SEOUL_KEY }}
         run: |
           for i in 1 2 3; do
-            node tools/collect_tour_festival.js && exit 0
+            node tools/collect_tour_festival.js --js "$RUNNER_TEMP/data_tour_festival.js" && exit 0
             echo "attempt $i failed; retry in 60s"; sleep 60
           done
           exit 1
+
+      # 기존 설치 앱용: 같은 목록을 앱 콘텐츠 키로 암호화해 원격 데이터(data_pub)로 — 업데이트 없이 매일 반영
+      - name: Encrypt for installed apps
+        env:
+          CONTENT_KEY: ${{ secrets.CONTENT_KEY }}
+        run: node tools/enc_publish.js "$RUNNER_TEMP/data_tour_festival.js" data_pub/tour/data/data_tour_festival.js.enc
 
       - name: Commit & push
         run: |
           git config user.name 'yogurt'
           git config user.email '60679462+helpmeyogurt@users.noreply.github.com'
-          git add tour/festival.json
+          git add tour/festival.json data_pub/tour/data/data_tour_festival.js.enc
           git diff --cached --quiet && echo 'no change' && exit 0
           git commit -m "tour: 축제 갱신 $(TZ=Asia/Seoul date +%Y-%m-%d\ %H:%M)"
           git push origin main || { git fetch origin main && git rebase --onto origin/main HEAD~1 && git push origin main; }

@@ -2,6 +2,7 @@
 //  · 기본: 한국관광공사 TourAPI(KorService2/searchFestival2) 전국 진행중+다가오는 축제
 //  · 보충(관광공사에 없는 것만, 같은 지역 안 이름 일치/포함이면 중복 처리): 이미지 있는 소스부터
 //      gb 경북 tour.gb.go.kr 목록 JSON / dj 대전 daejeontour.co.kr 페이지 내장 calEvents
+//      gn 경남 축제다모아 / cn 충남 / cb 충북 / gg 경기(ggtour) — tools/tour_regional.js
 //      gw 강원 gangwon.to 목록 HTML / jb 전북 tour.jb.go.kr 목록 HTML(세션 쿠키)
 //      vj 제주 VisitJeju 시드(tour/jeju_vj.json — 세션 토큰이 필요해 로컬 브라우저로 수집해 올림)
 //      se 서울 열린데이터 문화행사(축제-*, env SEOUL_KEY) / bs 부산 data.go.kr 부산축제정보(기간 자유 텍스트 해석)
@@ -15,6 +16,8 @@
 'use strict';
 const fs = require('fs');
 const TL = require('./tour_lib');
+const RG = require('./tour_regional');   // 경남·충남·충북·경기 관광사이트 파서(브라우저 UA)
+const BUA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36';
 const https = require('https');
 const http = require('http');
 const tls = require('tls');
@@ -65,7 +68,7 @@ function kstToday() {
 function req(url, opt = {}, hop = 0) {
   return new Promise((resolve, reject) => {
     const u = new URL(url);
-    const headers = Object.assign({ 'Accept': opt.accept || '*/*' }, opt.headers || {});
+    const headers = Object.assign({ 'Accept': opt.accept || '*/*', 'User-Agent': BUA }, opt.headers || {});
     if (opt.jar && opt.jar.length) headers.Cookie = opt.jar.join('; ');
     if (opt.body) { headers['Content-Type'] = 'application/x-www-form-urlencoded; charset=UTF-8'; headers['Content-Length'] = Buffer.byteLength(opt.body); }
     const ro = { method: opt.body ? 'POST' : 'GET', headers, timeout: 60000 };
@@ -217,6 +220,11 @@ const SOURCES = [
     }
     return out;
   } },
+  // 지역 관광사이트 4곳(경남 축제다모아·충남·충북·경기) — 기본 UA는 막고 브라우저 UA는 허용
+  { key: 'gn', fetch: async (today) => (await RG.gn(today)).map(x => Object.assign(x, { ar: 36 })) },
+  { key: 'cn', fetch: async (today) => (await RG.cn(today)).map(x => Object.assign(x, { ar: 34 })) },
+  { key: 'cb', fetch: async (today) => (await RG.cb(today)).map(x => Object.assign(x, { ar: 33 })) },
+  { key: 'gg', fetch: async (today) => (await RG.gg(today)).map(x => Object.assign(x, { ar: 31 })) },
   { key: 'se', fetch: async (today) => {   // 서울: 열린데이터 문화행사(culturalEventInfo) 중 분류 '축제-*'. 최근 등록순 → 앞 페이지만
     const SK = process.env.SEOUL_KEY;
     if (!SK) throw new Error('SEOUL_KEY 미설정');
