@@ -162,7 +162,12 @@ function tick(d) {
     }
     const s = st.collectors[c.key] || {};
     if (ok) { s.ok = new Date().toISOString(); s.fails = 0; c.files.forEach(f => touched.add(f)); }
-    else { s.fail = new Date().toISOString(); s.fails = (s.fails || 0) + 1; }
+    else {
+      s.fail = new Date().toISOString(); s.fails = (s.fails || 0) + 1;
+      // 루프 서버(같은 IP로 수 시간 상주)만 막히는 경우가 있음(2026-11-09 news-rank·movie-realtime 3시간 연속 timeout,
+      // 같은 시각 단독 실행·PC는 정상) → 3회 연속 실패마다 단독 워크플로(새 서버)로 대신 수집
+      if (s.fails % 3 === 0 && c.wf) dispatch(c.wf);
+    }
     s.secs = Math.round((Date.now() - t0) / 1000);
     st.collectors[c.key] = s;
     log(`${c.key} ${ok ? 'ok' : 'FAIL'} ${s.secs}s`);
