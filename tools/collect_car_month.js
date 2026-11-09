@@ -57,7 +57,11 @@ function genStamp() { const d = kstNow(); return d.getUTCFullYear() + '-' + p2(d
 
 const BASE = 'https://auto.danawa.com/auto/';
 const BRAND_K = '303,304,307,312,316,326,321,322,337';
-const BRAND_F = '362,349,371,376,413,422,459,367,394,399,381,440,390,385,358,427,491,486,514,509,500,610,569,573,546,587,611,583';
+// 구버전 앱 렌더러가 아는 수입 브랜드(모르는 코드는 brandCode()에서 예외 → 화면 안 뜸)
+const BRAND_F_OLD = '362,349,371,376,413,422,459,367,394,399,381,440,390,385,358,427,491,486,514,509,500,610,569,573,546,587,611,583';
+// + BYD(380)·폴스타(458)·지커(586)·GMC(602)·페라리(436): 예전 목록에 빠져 있어 BYD 등이 순위에서 통째로 누락됐음(2026-11-10)
+const BRAND_F = BRAND_F_OLD + ',380,458,586,602,436';
+const OLD_SET = new Set(BRAND_F_OLD.split(','));
 
 // 렌더러와 동일 split 파싱
 function carItems(html) {
@@ -103,8 +107,19 @@ function carItems(html) {
   const htmlF = await req(BASE + '?pcUse=y&Work=record&Tab=Model&Brand=' + BRAND_F + '&Month=' + yF + '-' + p2(mF) + '-00');
   const itemsF = carItems(htmlF);
   if (itemsF.length < 30) throw new Error('수입 파싱 부족: ' + itemsF.length);
-  out.imp = { ym: '' + yF + p2(mF), label: yF + '년 ' + p2(mF) + '월', items: itemsF };
+  // imp = 구버전 앱용(아는 브랜드만), impAll = 새 앱용(전체). 순위는 원본 그대로(구버전 목록엔 빈 순위가 생길 수 있음)
+  out.imp = { ym: '' + yF + p2(mF), label: yF + '년 ' + p2(mF) + '월', items: itemsF.filter(x => OLD_SET.has(x.bcode)) };
+  out.impAll = { ym: out.imp.ym, label: out.imp.label, items: itemsF };
+
+  // 이미 더 최근 달이 들어 있으면(수동 입력 등) 덮어쓰지 않음 — 다나와가 그 달을 올리면(같은 달) 그때 교체
+  try {
+    const prev = JSON.parse(fs.readFileSync(OUT, 'utf8'));
+    for (const k of ['kor', 'imp', 'impAll']) {
+      if (prev[k] && out[k] && String(prev[k].ym) > String(out[k].ym)) { out[k] = prev[k]; console.log(k + ': 기존 ' + prev[k].ym + '이 더 최근 → 유지'); }
+    }
+    if (!prev.impAll && prev.imp && String(prev.imp.ym) > String(out.impAll.ym)) out.impAll = prev.imp;
+  } catch (e) { /* 이전 파일 없음 */ }
 
   fs.writeFileSync(OUT, JSON.stringify(out));
-  console.log('저장: ' + OUT + ' (kor ' + out.kor.ym + '=' + itemsK.length + ', imp ' + out.imp.ym + '=' + itemsF.length + ', ' + Math.round(fs.statSync(OUT).size / 1024) + 'KB)');
+  console.log('저장: ' + OUT + ' (kor ' + out.kor.ym + '=' + itemsK.length + ', imp ' + out.imp.ym + '=' + out.imp.items.length + '/' + out.impAll.items.length + ', ' + Math.round(fs.statSync(OUT).size / 1024) + 'KB)');
 })().catch(e => { console.error('수집 실패: ' + e.message); process.exit(1); });
