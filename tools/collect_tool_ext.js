@@ -91,53 +91,74 @@ async function collectSun() {
 }
 
 // ---------- 대기질 (에어코리아 측정소별 실시간 = 시도 → 동/구 단위) ----------
-// getCtprvnRltmMesureDnsty(sidoName)로 시도별 전 측정소를 받아 stations에 담고,
-// 유효 측정소 평균으로 sido 요약을 만든다. (측정소목록 API는 키 미등록이라 addr
-// 기반 시군구 그룹은 불가 — 측정소명 자체가 구/동 단위라 그대로 노출.)
+// getCtprvnRltmMesureDnsty(sidoName=전국) 한 번으로 전 측정소를 받아 item.sidoName별로 묶고,
+// 유효 측정소 평균으로 sido 요약을 만든다. (예전엔 시도별 17회 호출 × 30분 = 하루 ~800회라
+// 공공데이터 일일 한도를 낮 1시쯤 소진 → 오후 내내 갱신 중단. 지금은 회당 2회.)
+// API가 광주·전남을 '전남광주' 하나로 돌려주므로 sidoName=광주 1회로 광주 측정소를 가려 나눈다.
+// (측정소목록 API는 키 미등록이라 addr 기반 시군구 그룹은 불가 — 측정소명 자체가 구/동 단위.)
 const AIR_SIDO = ['서울', '부산', '대구', '인천', '광주', '대전', '울산', '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주', '세종'];
+// 광주 조회 실패 시 대비 (2026-11 기준 광주 측정소)
+const AIR_GWANGJU_FALLBACK = ['건국동', '노대동', '농성동', '두암동', '서석동', '오선동', '우산동(광주)', '운암동', '유촌동', '일곡동', '주월동', '치평동', '평동'];
 function airNum(v) { const n = Number(v); return (v == null || v === '' || v === '-' || isNaN(n)) ? null : n; }
+// 한도 초과(LIMITED_NUMBER_OF_SERVICE_REQUESTS…)면 재시도해도 같으니 즉시 중단
+async function airFetch(sidoName) {
+  const url = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty`
+    + `?serviceKey=${encodeURIComponent(DATAGO_KEY)}&returnType=json&numOfRows=1000&pageNo=1`
+    + `&sidoName=${encodeURIComponent(sidoName)}&ver=1.3`;
+  for (let a = 1; a <= 3; a++) {                    // 에어코리아 백엔드 간헐 504 → 재시도
+    let r;
+    try { r = await get(url); } catch (e) { console.error(`air ${sidoName} t${a}: ${e.message}`); await sleep(4000); continue; }
+    let msg;
+    try {
+      const cand = JSON.parse(r.body);
+      if (cand.response && cand.response.header && cand.response.header.resultCode === '00') return cand.response.body.items || [];
+      msg = cand.response ? `${cand.response.header.resultCode} ${cand.response.header.resultMsg || ''}` : (cand.OpenAPI_ServiceResponse ? cand.OpenAPI_ServiceResponse.cmmMsgHeader.errMsg : String(r.status));
+    } catch (e) { msg = `JSON 아님 (${r.body.slice(0, 80)})`; }
+    console.error(`air ${sidoName} t${a}: ${msg}`);
+    if (/LIMITED_NUMBER|EXCEEDS/.test(msg + r.body.slice(0, 300))) { console.error('air: 일일 요청 한도 초과 — 재시도 중단'); return null; }
+    await sleep(4000);
+  }
+  return null;
+}
 async function collectAir() {
   if (!DATAGO_KEY) { console.log('air: DATAGO_KEY 없음 — 건너뜀'); return; }
+  const all = await airFetch('전국');
+  if (!all || !all.length) { console.error('air: 수집 실패(한도·활용신청·504 확인) — 기존 파일 유지'); return; }
+  let gj = null;
+  if (all.some(it => it.sidoName === '전남광주')) {
+    await sleep(300);
+    const gItems = await airFetch('광주');
+    gj = new Set((gItems && gItems.length ? gItems.map(it => (it.stationName || '').trim()) : AIR_GWANGJU_FALLBACK));
+  }
+  const groups = {};
+  let basisOut = '';
+  for (const it of all) {
+    const nm = (it.stationName || '').trim();
+    let s = (it.sidoName || '').trim();
+    if (!nm || !s) continue;
+    if (s === '전남광주') s = gj.has(nm) ? '광주' : '전남';
+    (groups[s] = groups[s] || []).push(it);
+    if (it.dataTime && !basisOut) basisOut = it.dataTime;
+  }
   const stations = {};
   const sido = {};
-  let basisOut = '';
-  let anyOk = false;
-  for (const s of AIR_SIDO) {
-    const url = `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty`
-      + `?serviceKey=${encodeURIComponent(DATAGO_KEY)}&returnType=json&numOfRows=700&pageNo=1`
-      + `&sidoName=${encodeURIComponent(s)}&ver=1.3`;
-    let items = null;
-    for (let a = 1; a <= 3 && !items; a++) {         // 에어코리아 백엔드 간헐 504 → 재시도
-      let r;
-      try { r = await get(url); } catch (e) { console.error(`air ${s} t${a}: ${e.message}`); await sleep(4000); continue; }
-      try {
-        const cand = JSON.parse(r.body);
-        if (cand.response && cand.response.header && cand.response.header.resultCode === '00') { items = cand.response.body.items || []; break; }
-        console.error(`air ${s} t${a}: ${cand.response ? cand.response.header.resultCode : (cand.OpenAPI_ServiceResponse ? cand.OpenAPI_ServiceResponse.cmmMsgHeader.errMsg : r.status)}`);
-      } catch (e) { console.error(`air ${s} t${a}: JSON 아님 (${r.body.slice(0, 60)})`); }
-      await sleep(4000);
-    }
+  const order = AIR_SIDO.concat(Object.keys(groups).filter(s => !AIR_SIDO.includes(s)));
+  for (const s of order) {
+    const items = groups[s];
     if (!items) continue;
     const list = [];
     let sum10 = 0, cnt10 = 0, sum25 = 0, cnt25 = 0;
     for (const it of items) {
-      const nm = (it.stationName || '').trim();
-      if (!nm) continue;
       const pm10 = airNum(it.pm10Value);
       const pm25 = airNum(it.pm25Value);
-      list.push({ n: nm, pm10, pm25 });
+      list.push({ n: it.stationName.trim(), pm10, pm25 });
       if (pm10 != null) { sum10 += pm10; cnt10++; }
       if (pm25 != null) { sum25 += pm25; cnt25++; }
-      if (it.dataTime && !basisOut) basisOut = it.dataTime;
     }
-    if (!list.length) continue;
     list.sort((a, b) => a.n.localeCompare(b.n, 'ko'));
     stations[s] = list;
     sido[s] = { pm10: cnt10 ? Math.round(sum10 / cnt10) : null, pm25: cnt25 ? Math.round(sum25 / cnt25) : null };
-    anyOk = true;
-    await sleep(300);
   }
-  if (!anyOk) { console.error('air: 수집 실패(활용신청/승인·504 확인) — 기존 파일 유지'); return; }
   fs.writeFileSync(path.join(OUT_DIR, 'air.json'), JSON.stringify({ generated: stamp(), basis: basisOut, sido, stations }));
   const total = Object.values(stations).reduce((a, l) => a + l.length, 0);
   console.log(`air: ${Object.keys(stations).length}개 시도 · ${total}개 측정소 (기준 ${basisOut})`);
