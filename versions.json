@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-26 11:12 KST",
+ "generated": "2026-11-26 12:12 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -34,10 +34,10 @@
    "key": "intrate",
    "name": "금리끝판왕",
    "pkg": "me.yogurthelp.intrate",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "dep",
@@ -52,10 +52,10 @@
    "key": "loan",
    "name": "대출금리끝판왕",
    "pkg": "me.yogurthelp.loan",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "finance",
@@ -88,37 +88,37 @@
    "key": "realtytrade",
    "name": "실거래가끝판왕",
    "pkg": "me.yogurthelp.realtytrade",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "realtyprice",
    "name": "공시가격끝판왕",
    "pkg": "me.yogurthelp.realtyprice",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "realtycal",
    "name": "부동산계산기끝판왕",
    "pkg": "me.yogurthelp.realtycal",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "realtydata",
    "name": "부동산정보끝판왕",
    "pkg": "me.yogurthelp.realtydata",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "law",
