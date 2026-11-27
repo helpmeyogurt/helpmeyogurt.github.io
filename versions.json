@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-27 08:11 KST",
+ "generated": "2026-11-27 09:11 KST",
  "okCount": 27,
  "total": 27,
  "apps": [
@@ -7,28 +7,28 @@
    "key": "weather",
    "name": "날씨끝판왕",
    "pkg": "me.yogurthelp.weather",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "news",
    "name": "뉴스끝판왕",
    "pkg": "me.yogurthelp.news",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "tel",
    "name": "전화번호끝판왕",
    "pkg": "me.yogurthelp.tel",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "intrate",
@@ -43,10 +43,10 @@
    "key": "dep",
    "name": "예금금리끝판왕",
    "pkg": "me.yogurthelp.dep",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "loan",
@@ -61,28 +61,28 @@
    "key": "finance",
    "name": "금융끝판왕",
    "pkg": "me.yogurthelp.finance",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "stock",
    "name": "주가지수끝판왕",
    "pkg": "me.yogurthelp.stock",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "exchange",
    "name": "환율끝판왕",
    "pkg": "me.yogurthelp.exchange",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "realtytrade",
@@ -124,46 +124,46 @@
    "key": "law",
    "name": "법률정보끝판왕",
    "pkg": "me.yogurthelp.law",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "salary",
    "name": "월급계산기끝판왕",
    "pkg": "me.yogurthelp.salary",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "tax",
    "name": "세금정보끝판왕",
    "pkg": "me.yogurthelp.tax",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "phone",
    "name": "휴대폰끝판왕",
    "pkg": "me.yogurthelp.phone",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "phonemem",
    "name": "휴대폰멤버십끝판왕",
    "pkg": "me.yogurthelp.phonemem",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "car",
@@ -178,55 +178,55 @@
    "key": "movie",
    "name": "박스오피스끝판왕",
    "pkg": "me.yogurthelp.movie",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "tv",
    "name": "시청률끝판왕",
    "pkg": "me.yogurthelp.tv",
-   "target": "5.2.1",
+   "target": "5.2.2",
    "play": "5.2.1",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "music",
    "name": "음원차트끝판왕",
    "pkg": "me.yogurthelp.music",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "book",
    "name": "베스트셀러끝판왕",
    "pkg": "me.yogurthelp.book",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "perform",
    "name": "공연순위끝판왕",
    "pkg": "me.yogurthelp.perform",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "tool",
    "name": "도구모음끝판왕",
    "pkg": "me.yogurthelp.tool",
-   "target": "5.2.0",
+   "target": "5.2.1",
    "play": "5.2.0",
    "note": "",
-   "status": "same"
+   "status": "local_ahead"
   },
   {
    "key": "election",
